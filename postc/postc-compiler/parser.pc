@@ -1,0 +1,41 @@
+# PostC Compiler - Parser
+# Parses tokens into an Abstract Syntax Tree (AST)
+
+# AST node types
+:AST_PROGRAM 0 param ;
+:AST_FUNCTION_DECL 0 param ;
+:AST_VARIABLE_DECL 0 param ;
+:AST_BINARY_OP 0 param ;
+:AST_UNARY_OP 0 param ;
+:AST_CALL 0 param ;
+:AST_IF_EXPR 0 param ;
+:AST_WHILE_LOOP 0 param ;
+:AST_FOR_LOOP 0 param ;
+:AST_BLOCK 0 param ;
+:AST_INTEGER_LITERAL 0 param ;
+:AST_FLOAT_LITERAL 0 param ;
+:AST_STRING_LITERAL 0 param ;
+:AST_BOOLEAN_LITERAL 0 param ;
+:AST_IDENTIFIER 0 param ;
+:AST_STACK_OP 0 param ;
+
+# Parser state
+:parser_init 1 param
+  # Initialize parser with token stream
+  # param 1: token stream
+  drop
+;
+
+# Parse program
+:parser_parse_program 1 param
+  # Parse a complete program
+  # param 1: parser state
+  drop
+  AST_PROGRAM
+;
+
+# Test parser
+:parser_test 0 param
+  "Testing parser" print
+  AST_PROGRAM print
+;

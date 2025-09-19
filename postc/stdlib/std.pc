@@ -1,0 +1,51 @@
+# PostC Standard Library
+
+# Add two numbers
+:add 2 param
+  +
+;
+
+# Subtract two numbers
+:sub 2 param
+  -
+;
+
+# Multiply two numbers
+:mul 2 param
+  *
+;
+
+# Divide two numbers
+:div 2 param
+  /
+;
+
+# Print a value
+:print 1 param
+  drop
+;
+
+# Duplicate top stack element
+:dup 1 param
+  dup
+;
+
+# Drop top stack element
+:drop 1 param
+  drop
+;
+
+# Swap top two stack elements
+:swap 2 param
+  swap
+;
+
+# Copy second element to top
+:over 2 param
+  over
+;
+
+# Rotate top three elements
+:rot 3 param
+  rot
+;

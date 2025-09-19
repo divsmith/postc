@@ -1,0 +1,7 @@
+:add 2 param
+  +
+;
+
+5 3 add print
+# This is a comment
+"hello world" print

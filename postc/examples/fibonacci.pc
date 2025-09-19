@@ -1,0 +1,27 @@
+# PostC example program - Fibonacci sequence
+
+# Function to calculate the nth Fibonacci number
+:fib 1 param
+  dup 2 < if
+    # Base case: n < 2, return n
+    drop
+  else
+    # Recursive case: fib(n-1) + fib(n-2)
+    dup 1 - fib
+    swap 2 - fib
+    +
+  ;
+;
+
+# Function to print the first n Fibonacci numbers
+:print_fib 1 param
+  0 swap for
+    dup fib print
+  ;
+;
+
+# Main program
+"Calculating first 10 Fibonacci numbers:" print
+10 print_fib
+
+"Done!" print

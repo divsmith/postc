@@ -1,0 +1,61 @@
+# PostC Compiler - Lexer
+# Tokenizes PostC source code into a stream of tokens
+
+# Token types
+:TOKEN_INTEGER 0 param ;
+:TOKEN_FLOAT 0 param ;
+:TOKEN_STRING 0 param ;
+:TOKEN_IDENTIFIER 0 param ;
+:TOKEN_PLUS 0 param ;
+:TOKEN_MINUS 0 param ;
+:TOKEN_MULTIPLY 0 param ;
+:TOKEN_DIVIDE 0 param ;
+:TOKEN_ASSIGN 0 param ;
+:TOKEN_EQUAL 0 param ;
+:TOKEN_NOT_EQUAL 0 param ;
+:TOKEN_LESS 0 param ;
+:TOKEN_GREATER 0 param ;
+:TOKEN_LESS_EQUAL 0 param ;
+:TOKEN_GREATER_EQUAL 0 param ;
+:TOKEN_DUP 0 param ;
+:TOKEN_DROP 0 param ;
+:TOKEN_SWAP 0 param ;
+:TOKEN_OVER 0 param ;
+:TOKEN_ROT 0 param ;
+:TOKEN_LET 0 param ;
+:TOKEN_VAR 0 param ;
+:TOKEN_IF 0 param ;
+:TOKEN_ELSE 0 param ;
+:TOKEN_WHILE 0 param ;
+:TOKEN_FOR 0 param ;
+:TOKEN_PRINT 0 param ;
+:TOKEN_COLON 0 param ;
+:TOKEN_SEMICOLON 0 param ;
+:TOKEN_LPAREN 0 param ;
+:TOKEN_RPAREN 0 param ;
+:TOKEN_LBRACE 0 param ;
+:TOKEN_RBRACE 0 param ;
+:TOKEN_EOF 0 param ;
+
+# Lexer state
+:lexer_init 3 param
+  # Initialize lexer with source text
+  # param 1: source text
+  # param 2: position pointer
+  # param 3: line number
+  drop drop drop
+;
+
+# Get next token
+:lexer_next_token 1 param
+  # Get the next token from the input
+  # param 1: lexer state
+  drop
+  TOKEN_EOF
+;
+
+# Test lexer
+:lexer_test 0 param
+  "Testing lexer" print
+  TOKEN_INTEGER print
+;

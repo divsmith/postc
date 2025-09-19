@@ -1,0 +1,52 @@
+# PostC Compiler - Code Generator
+# Generates bytecode from the AST
+
+# Opcode definitions
+:OPCODE_LOAD_CONST 0 param ;
+:OPCODE_LOAD_TRUE 0 param ;
+:OPCODE_LOAD_FALSE 0 param ;
+:OPCODE_LOAD_STRING 0 param ;
+:OPCODE_LOAD_VAR 0 param ;
+:OPCODE_STORE_VAR 0 param ;
+:OPCODE_DUP 0 param ;
+:OPCODE_DROP 0 param ;
+:OPCODE_SWAP 0 param ;
+:OPCODE_OVER 0 param ;
+:OPCODE_ROT 0 param ;
+:OPCODE_ADD 0 param ;
+:OPCODE_SUB 0 param ;
+:OPCODE_MUL 0 param ;
+:OPCODE_DIV 0 param ;
+:OPCODE_EQ 0 param ;
+:OPCODE_NE 0 param ;
+:OPCODE_LT 0 param ;
+:OPCODE_GT 0 param ;
+:OPCODE_LE 0 param ;
+:OPCODE_GE 0 param ;
+:OPCODE_JUMP 0 param ;
+:OPCODE_JUMP_IF_FALSE 0 param ;
+:OPCODE_CALL 0 param ;
+:OPCODE_RETURN 0 param ;
+:OPCODE_PRINT 0 param ;
+:OPCODE_HALT 0 param ;
+
+# Code generator state
+:codegen_init 1 param
+  # Initialize code generator with AST
+  # param 1: AST
+  drop
+;
+
+# Generate code
+:codegen_generate 1 param
+  # Generate bytecode from AST
+  # param 1: code generator state
+  drop
+  OPCODE_HALT
+;
+
+# Test code generator
+:codegen_test 0 param
+  "Testing code generator" print
+  OPCODE_HALT print
+;
