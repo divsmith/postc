@@ -1,5 +1,0 @@
-:add 2 param
-  +
-;
-
-5 3 add print
