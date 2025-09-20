@@ -1,0 +1,34 @@
+# PostC Example: Working Features
+# Demonstrates working features of PostC
+
+"PostC Working Features" print
+
+# Test arithmetic
+"5 + 3 =" print
+5 3 + print
+
+"10 - 4 =" print
+10 4 - print
+
+"6 * 7 =" print
+6 7 * print
+
+"20 / 5 =" print
+20 5 / print
+
+# Test functions
+:add 2 param
+  +
+;
+
+:mul 2 param
+  *
+;
+
+"Function call: 5 add 3 =" print
+5 3 add print
+
+"Function call: 4 mul 7 =" print
+4 7 mul print
+
+"Example complete!" print

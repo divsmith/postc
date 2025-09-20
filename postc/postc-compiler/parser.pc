@@ -19,21 +19,6 @@
 :AST_IDENTIFIER 0 param ;
 :AST_STACK_OP 0 param ;
 
-# Parser state
-:parser_init 1 param
-  # Initialize parser with token stream
-  # param 1: token stream
-  drop
-;
-
-# Parse program
-:parser_parse_program 1 param
-  # Parse a complete program
-  # param 1: parser state
-  drop
-  AST_PROGRAM
-;
-
 # Test parser
 :parser_test 0 param
   "Testing parser" print

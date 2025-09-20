@@ -1,0 +1,61 @@
+# PostC Compiler Test
+# Tests various features of the PostC compiler
+
+# Test arithmetic operations
+"Testing arithmetic operations:" print
+5 3 + print        # Should print 8
+10 4 - print       # Should print 6
+7 6 * print        # Should print 42
+20 5 / print       # Should print 4
+
+# Test function definition and calling
+:add 2 param
+  +
+;
+
+:mul 2 param
+  *
+;
+
+"Testing function calls:" print
+5 3 add print      # Should print 8
+4 7 mul print      # Should print 28
+
+# Test boolean operations
+"Testing boolean operations:" print
+5 3 < print        # Should print true
+5 3 > print        # Should print false
+5 5 == print       # Should print true
+5 3 != print       # Should print true
+
+# Test stack operations
+"Testing stack operations:" print
+1 2 3 dup print    # Should print 3
+1 2 3 drop print   # Should print 2
+1 2 3 swap print   # Should print 2
+1 2 3 over print   # Should print 2
+1 2 3 rot print    # Should print 1
+
+# Test control structures
+"Testing control structures:" print
+5 3 < if
+  "5 is less than 3" print
+else
+  "5 is not less than 3" print
+;
+
+# Test variables
+"Testing variables:" print
+let x 42
+let y 8
+x print            # Should print 42
+y print            # Should print 8
+x y + print        # Should print 50
+
+# Test loops
+"Testing loops:" print
+5 for
+  "Hello" print
+;
+
+"Test complete!" print

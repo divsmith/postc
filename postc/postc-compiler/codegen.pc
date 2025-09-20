@@ -30,21 +30,6 @@
 :OPCODE_PRINT 0 param ;
 :OPCODE_HALT 0 param ;
 
-# Code generator state
-:codegen_init 1 param
-  # Initialize code generator with AST
-  # param 1: AST
-  drop
-;
-
-# Generate code
-:codegen_generate 1 param
-  # Generate bytecode from AST
-  # param 1: code generator state
-  drop
-  OPCODE_HALT
-;
-
 # Test code generator
 :codegen_test 0 param
   "Testing code generator" print

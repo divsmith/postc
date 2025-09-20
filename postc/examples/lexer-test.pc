@@ -1,0 +1,51 @@
+# PostC Lexer Test
+# Tests the lexer functionality
+
+# Token types
+:TOKEN_INTEGER 1 param ;
+:TOKEN_FLOAT 2 param ;
+:TOKEN_STRING 3 param ;
+:TOKEN_BOOLEAN 4 param ;
+:TOKEN_IDENTIFIER 5 param ;
+:TOKEN_PLUS 6 param ;
+:TOKEN_MINUS 7 param ;
+:TOKEN_MULTIPLY 8 param ;
+:TOKEN_DIVIDE 9 param ;
+:TOKEN_ASSIGN 10 param ;
+:TOKEN_EQUAL 11 param ;
+:TOKEN_NOT_EQUAL 12 param ;
+:TOKEN_LESS 13 param ;
+:TOKEN_GREATER 14 param ;
+:TOKEN_LESS_EQUAL 15 param ;
+:TOKEN_GREATER_EQUAL 16 param ;
+:TOKEN_DUP 17 param ;
+:TOKEN_DROP 18 param ;
+:TOKEN_SWAP 19 param ;
+:TOKEN_OVER 20 param ;
+:TOKEN_ROT 21 param ;
+:TOKEN_LET 22 param ;
+:TOKEN_VAR 23 param ;
+:TOKEN_IF 24 param ;
+:TOKEN_ELSE 25 param ;
+:TOKEN_WHILE 26 param ;
+:TOKEN_DO 27 param ;
+:TOKEN_FOR 28 param ;
+:TOKEN_FN 29 param ;
+:TOKEN_PARAM 30 param ;
+:TOKEN_RETURN 31 param ;
+:TOKEN_PRINT 32 param ;
+:TOKEN_COLON 33 param ;
+:TOKEN_SEMICOLON 34 param ;
+:TOKEN_LPAREN 35 param ;
+:TOKEN_RPAREN 36 param ;
+:TOKEN_LBRACE 37 param ;
+:TOKEN_RBRACE 38 param ;
+:TOKEN_LBRACKET 39 param ;
+:TOKEN_RBRACKET 40 param ;
+:TOKEN_COMMA 41 param ;
+:TOKEN_COMMENT 42 param ;
+:TOKEN_EOF 43 param ;
+:TOKEN_NEWLINE 44 param ;
+
+# Simple test program
+"5 3 + ;" print

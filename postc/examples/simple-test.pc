@@ -1,0 +1,17 @@
+# Simple PostC Test
+# Tests basic functionality
+
+"Running simple PostC test" print
+
+# Test arithmetic
+5 3 + print
+
+# Test function
+:add 2 param
+  +
+;
+
+5 3 add print
+
+# Test done
+"Test completed successfully" print

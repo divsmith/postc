@@ -1,24 +1,5 @@
 # PostC Compiler - Main
 # Main compiler driver
 
-# Include lexer
-# Include parser
-# Include codegen
-
-# Compile a PostC source file
-:compile 1 param
-  # Compile a PostC source file
-  # param 1: source file name
-  drop
-  "Compilation complete" print
-;
-
-# Main function
-:main 0 param
-  "PostC Compiler" print
-  "Usage: postc <source_file>" print
-;
-
-# Run main function
 "PostC Compiler" print
 "Usage: postc <source_file>" print

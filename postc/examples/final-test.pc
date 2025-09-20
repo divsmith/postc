@@ -1,0 +1,3 @@
+# Simple test program
+"Hello, PostC!" print
+5 3 + print

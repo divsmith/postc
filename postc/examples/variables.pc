@@ -1,0 +1,30 @@
+# PostC Example: Variables and Control Structures
+# Demonstrates variables, conditionals, and loops
+
+"PostC Variables and Control Structures" print
+
+# Test variables
+let x 10
+let y 20
+"Value of x:" print
+x print
+"Value of y:" print
+y print
+"Sum of x and y:" print
+x y + print
+
+# Test conditionals
+"Testing conditionals:" print
+x y < if
+  "x is less than y" print
+else
+  "x is not less than y" print
+;
+
+# Test loops
+"Counting from 1 to 5:" print
+5 for
+  "Hello" print
+;
+
+"Example complete!" print

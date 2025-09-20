@@ -5,6 +5,7 @@
 :TOKEN_INTEGER 0 param ;
 :TOKEN_FLOAT 0 param ;
 :TOKEN_STRING 0 param ;
+:TOKEN_BOOLEAN 0 param ;
 :TOKEN_IDENTIFIER 0 param ;
 :TOKEN_PLUS 0 param ;
 :TOKEN_MINUS 0 param ;
@@ -27,7 +28,11 @@
 :TOKEN_IF 0 param ;
 :TOKEN_ELSE 0 param ;
 :TOKEN_WHILE 0 param ;
+:TOKEN_DO 0 param ;
 :TOKEN_FOR 0 param ;
+:TOKEN_FN 0 param ;
+:TOKEN_PARAM 0 param ;
+:TOKEN_RETURN 0 param ;
 :TOKEN_PRINT 0 param ;
 :TOKEN_COLON 0 param ;
 :TOKEN_SEMICOLON 0 param ;
@@ -35,24 +40,12 @@
 :TOKEN_RPAREN 0 param ;
 :TOKEN_LBRACE 0 param ;
 :TOKEN_RBRACE 0 param ;
+:TOKEN_LBRACKET 0 param ;
+:TOKEN_RBRACKET 0 param ;
+:TOKEN_COMMA 0 param ;
+:TOKEN_COMMENT 0 param ;
 :TOKEN_EOF 0 param ;
-
-# Lexer state
-:lexer_init 3 param
-  # Initialize lexer with source text
-  # param 1: source text
-  # param 2: position pointer
-  # param 3: line number
-  drop drop drop
-;
-
-# Get next token
-:lexer_next_token 1 param
-  # Get the next token from the input
-  # param 1: lexer state
-  drop
-  TOKEN_EOF
-;
+:TOKEN_NEWLINE 0 param ;
 
 # Test lexer
 :lexer_test 0 param

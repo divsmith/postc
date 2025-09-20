@@ -1,0 +1,13 @@
+# PostC Example: Factorial Calculation
+# Demonstrates recursion and conditionals
+
+:factorial 1 param
+  dup 2 < if
+    drop 1
+  else
+    dup 1 - factorial *
+  ;
+;
+
+"Calculating factorial of 5:" print
+5 factorial print
