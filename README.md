@@ -16,16 +16,13 @@ PostC is a toy programming language that uses Reverse Polish Notation (RPN) for 
 
 ```
 .
-├── bootstrap/          # Bootstrap compiler (Python)
-├── postc-compiler/     # Self-hosting compiler (PostC)
+├── src/
+│   ├── bootstrap/      # Bootstrap compiler (Python)
+│   └── compiler/       # Self-hosting compiler (PostC)
 ├── stdlib/             # Standard library
 ├── examples/           # Example programs
 ├── tests/              # Test programs
-├── build-postc.sh      # Build script for self-hosting compiler
-├── final-test.sh       # Final test script
-├── test-self-hosting.sh # Test script for self-hosting
-├── test.pc             # Simple test program
-└── lexer.output        # Lexer output file
+└── Makefile            # Build and test script
 ```
 
 ## Getting Started
@@ -33,6 +30,7 @@ PostC is a toy programming language that uses Reverse Polish Notation (RPN) for 
 ### Prerequisites
 
 - Python 3.11 or later
+- Make
 
 ### Language Syntax
 
@@ -137,6 +135,8 @@ PostC includes a standard library with basic functions:
 
 ## Example Programs
 
+See the `examples/` directory for sample PostC programs.
+
 ### Hello World
 ```
 "Hello, World!" print
@@ -161,83 +161,39 @@ PostC includes a standard library with basic functions:
 10 fib print
 ```
 
-### Simple Calculator
-```
-# Add two numbers
-:add 2 param
-  +
-;
+## Building and Testing
 
-# Multiply two numbers
-:mul 2 param
-  *
-;
+You can use the `Makefile` to build and test the compiler.
 
-# Calculate (5 + 3) * 2
-5 3 add 2 mul print  # Outputs: 16
-```
-
-## Building the Compiler
-
-### Building the Self-Hosting Compiler
+### Build the Self-Hosting Compiler
 
 To build the self-hosting compiler:
 
 ```bash
-./build-postc.sh
+make build
 ```
 
-This will compile each component of the PostC compiler using the bootstrap compiler:
-1. Compiling lexer
-2. Compiling parser
-3. Compiling code generator
-4. Compiling main compiler
+This will compile each component of the PostC compiler using the bootstrap compiler.
 
-### Build Process Details
+### Run Tests
 
-The PostC compiler is built in two stages:
-
-**Stage 1: Bootstrap Compiler (Python)**
-- Implemented in Python
-- Can compile and run PostC programs
-- Used to compile the self-hosting compiler
-
-**Stage 2: Self-Hosting Compiler (PostC)**
-- Implemented in PostC itself
-- Compiled using the bootstrap compiler
-- Can compile and run PostC programs
-
-## Running PostC Programs
-
-### Using the Bootstrap Compiler
-
-To run a PostC program with the bootstrap compiler:
+To run the test suite:
 
 ```bash
-python3 bootstrap/postc.py <source_file>
+make test
 ```
 
-### Using the Self-Hosting Compiler
+This will run a series of tests to ensure the compiler is working correctly.
 
-After building the self-hosting compiler, you can use it to compile PostC programs.
+### Run a Specific Example
 
-## Testing
-
-### Testing Self-Hosting Capability
-
-To test that the self-hosting compiler works correctly:
+To run a specific example, use the `run-example` target:
 
 ```bash
-./test-self-hosting.sh
+make run-example EXAMPLE=hello
 ```
 
-### Final Verification
-
-To run a complete test of the entire system:
-
-```bash
-./final-test.sh
-```
+This will run the `examples/hello.pc` program.
 
 ## Compiler Implementation
 
@@ -256,9 +212,9 @@ The bootstrap compiler is a complete implementation with the following component
 
 The self-hosting compiler is implemented in PostC itself and includes:
 
-1. **Lexer** - Tokenizes PostC source code (`postc-compiler/lexer.pc`)
-2. **Parser** - Parses tokens into an AST (`postc-compiler/parser.pc`)
-3. **Code Generator** - Generates bytecode from the AST (`postc-compiler/codegen.pc`)
+1. **Lexer** - Tokenizes PostC source code (`src/compiler/lexer.pc`)
+2. **Parser** - Parses tokens into an AST (`src/compiler/parser.pc`)
+3. **Code Generator** - Generates bytecode from the AST (`src/compiler/codegen.pc`)
 
 ## Future Improvements
 
