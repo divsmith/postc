@@ -1,0 +1,332 @@
+{
+  "constants": [
+    "Testing lexer",
+    "TOKEN_INTEGER"
+  ],
+  "functions": {
+    "TOKEN_INTEGER": {
+      "name": "TOKEN_INTEGER",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_FLOAT": {
+      "name": "TOKEN_FLOAT",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_STRING": {
+      "name": "TOKEN_STRING",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_BOOLEAN": {
+      "name": "TOKEN_BOOLEAN",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_IDENTIFIER": {
+      "name": "TOKEN_IDENTIFIER",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_PLUS": {
+      "name": "TOKEN_PLUS",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_MINUS": {
+      "name": "TOKEN_MINUS",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_MULTIPLY": {
+      "name": "TOKEN_MULTIPLY",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_DIVIDE": {
+      "name": "TOKEN_DIVIDE",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_ASSIGN": {
+      "name": "TOKEN_ASSIGN",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_EQUAL": {
+      "name": "TOKEN_EQUAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_NOT_EQUAL": {
+      "name": "TOKEN_NOT_EQUAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_LESS": {
+      "name": "TOKEN_LESS",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_GREATER": {
+      "name": "TOKEN_GREATER",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_LESS_EQUAL": {
+      "name": "TOKEN_LESS_EQUAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_GREATER_EQUAL": {
+      "name": "TOKEN_GREATER_EQUAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_DUP": {
+      "name": "TOKEN_DUP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_DROP": {
+      "name": "TOKEN_DROP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_SWAP": {
+      "name": "TOKEN_SWAP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_OVER": {
+      "name": "TOKEN_OVER",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_ROT": {
+      "name": "TOKEN_ROT",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_LET": {
+      "name": "TOKEN_LET",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_VAR": {
+      "name": "TOKEN_VAR",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_IF": {
+      "name": "TOKEN_IF",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_ELSE": {
+      "name": "TOKEN_ELSE",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_WHILE": {
+      "name": "TOKEN_WHILE",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_DO": {
+      "name": "TOKEN_DO",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_FOR": {
+      "name": "TOKEN_FOR",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_FN": {
+      "name": "TOKEN_FN",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_PARAM": {
+      "name": "TOKEN_PARAM",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_RETURN": {
+      "name": "TOKEN_RETURN",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_PRINT": {
+      "name": "TOKEN_PRINT",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_COLON": {
+      "name": "TOKEN_COLON",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_SEMICOLON": {
+      "name": "TOKEN_SEMICOLON",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_LPAREN": {
+      "name": "TOKEN_LPAREN",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_RPAREN": {
+      "name": "TOKEN_RPAREN",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_LBRACE": {
+      "name": "TOKEN_LBRACE",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_RBRACE": {
+      "name": "TOKEN_RBRACE",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_LBRACKET": {
+      "name": "TOKEN_LBRACKET",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_RBRACKET": {
+      "name": "TOKEN_RBRACKET",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_COMMA": {
+      "name": "TOKEN_COMMA",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_COMMENT": {
+      "name": "TOKEN_COMMENT",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_EOF": {
+      "name": "TOKEN_EOF",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "TOKEN_NEWLINE": {
+      "name": "TOKEN_NEWLINE",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "lexer_test": {
+      "name": "lexer_test",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 0",
+        "PRINT",
+        "CALL 1",
+        "PRINT",
+        "RETURN"
+      ]
+    },
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": []
+    }
+  }
+}

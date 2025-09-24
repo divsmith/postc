@@ -1,0 +1,27 @@
+{
+  "constants": [
+    "PostC Compiler",
+    "Usage: postc <source_file>",
+    "Compilation target support:",
+    "- Bytecode (default)",
+    "- WASM (use wasm.pc)"
+  ],
+  "functions": {
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 0",
+        "PRINT",
+        "LOAD_STRING 1",
+        "PRINT",
+        "LOAD_STRING 2",
+        "PRINT",
+        "LOAD_STRING 3",
+        "PRINT",
+        "LOAD_STRING 4",
+        "PRINT"
+      ]
+    }
+  }
+}

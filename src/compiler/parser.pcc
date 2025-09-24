@@ -1,0 +1,136 @@
+{
+  "constants": [
+    "Testing parser",
+    "AST_PROGRAM"
+  ],
+  "functions": {
+    "AST_PROGRAM": {
+      "name": "AST_PROGRAM",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_FUNCTION_DECL": {
+      "name": "AST_FUNCTION_DECL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_VARIABLE_DECL": {
+      "name": "AST_VARIABLE_DECL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_BINARY_OP": {
+      "name": "AST_BINARY_OP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_UNARY_OP": {
+      "name": "AST_UNARY_OP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_CALL": {
+      "name": "AST_CALL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_IF_EXPR": {
+      "name": "AST_IF_EXPR",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_WHILE_LOOP": {
+      "name": "AST_WHILE_LOOP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_FOR_LOOP": {
+      "name": "AST_FOR_LOOP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_BLOCK": {
+      "name": "AST_BLOCK",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_INTEGER_LITERAL": {
+      "name": "AST_INTEGER_LITERAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_FLOAT_LITERAL": {
+      "name": "AST_FLOAT_LITERAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_STRING_LITERAL": {
+      "name": "AST_STRING_LITERAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_BOOLEAN_LITERAL": {
+      "name": "AST_BOOLEAN_LITERAL",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_IDENTIFIER": {
+      "name": "AST_IDENTIFIER",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "AST_STACK_OP": {
+      "name": "AST_STACK_OP",
+      "param_count": 0,
+      "instructions": [
+        "RETURN"
+      ]
+    },
+    "parser_test": {
+      "name": "parser_test",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 0",
+        "PRINT",
+        "CALL 1",
+        "PRINT",
+        "RETURN"
+      ]
+    },
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": []
+    }
+  }
+}

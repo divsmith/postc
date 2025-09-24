@@ -1,0 +1,112 @@
+# PostC Compiler - WASM Code Generator
+# Generates WebAssembly text format from the AST
+
+# WASM instruction definitions
+:WASM_I32_CONST 0 param ;
+:WASM_F64_CONST 0 param ;
+:WASM_GLOBAL_GET 0 param ;
+:WASM_GLOBAL_SET 0 param ;
+:WASM_DROP 0 param ;
+:WASM_SELECT 0 param ;
+:WASM_I32_ADD 0 param ;
+:WASM_I32_SUB 0 param ;
+:WASM_I32_MUL 0 param ;
+:WASM_I32_DIV_S 0 param ;
+:WASM_F64_ADD 0 param ;
+:WASM_F64_SUB 0 param ;
+:WASM_F64_MUL 0 param ;
+:WASM_F64_DIV 0 param ;
+:WASM_I32_EQ 0 param ;
+:WASM_I32_NE 0 param ;
+:WASM_I32_LT_S 0 param ;
+:WASM_I32_GT_S 0 param ;
+:WASM_I32_LE_S 0 param ;
+:WASM_I32_GE_S 0 param ;
+:WASM_F64_EQ 0 param ;
+:WASM_F64_NE 0 param ;
+:WASM_F64_LT 0 param ;
+:WASM_F64_GT 0 param ;
+:WASM_F64_LE 0 param ;
+:WASM_F64_GE 0 param ;
+:WASM_BR 0 param ;
+:WASM_BR_IF 0 param ;
+:WASM_CALL 0 param ;
+:WASM_RETURN 0 param ;
+:WASM_MEMORY_GROW 0 param ;
+:WASM_MEMORY_SIZE 0 param ;
+
+# Function to generate WASM module header
+:generate_wasm_header 0 param
+  "(module" print
+  "  (import \"wasi_snapshot_preview1\" \"fd_write\" (func $fd_write (param i32 i32 i32 i32) (result i32)))" print
+  "  (memory (export \"memory\") 1)" print
+;
+
+# Function to generate WASM globals for variables
+:generate_wasm_globals 1 param count
+  # For simplicity, we'll generate a fixed number of globals
+  # In a full implementation, this would be based on the actual variables
+  0 var i
+  count i < while
+    "  (global $var_" print
+    i print
+    " (mut f64) (f64.const 0.0))" print
+    i 1 + i store
+  ;
+;
+
+# Function to generate WASM function
+:generate_wasm_function 1 param name
+  "  (func $" print
+  name print
+  " (export \"" print
+  name print
+  "\")" print
+  "    (local $temp i32)" print
+;
+
+# Function to generate WASM module footer
+:generate_wasm_footer 0 param
+  "  )" print
+  ")" print
+;
+
+# Main function to generate WASM from bytecode
+:generate_wasm_from_bytecode 2 param bytecode_file output_file
+  "Generating WASM from " print
+  bytecode_file print
+  " to " print
+  output_file print
+  "..." print
+  
+  # In a full implementation, this would:
+  # 1. Load the bytecode file
+  # 2. Parse the bytecode
+  # 3. Generate equivalent WASM instructions
+  # 4. Write to output file
+  
+  # For now, we'll just generate a basic template
+  generate_wasm_header
+  10 generate_wasm_globals
+  "main" generate_wasm_function
+  "    i32.const 42" print
+  "    ;; In a full implementation, this would contain the actual program logic
+  "    ;; For now, just a placeholder" print
+  "    drop" print
+  generate_wasm_footer
+  
+  "WASM generation complete!" print
+;
+
+# Test WASM generator
+:wasm_gen_test 0 param
+  "Testing WASM generator" print
+  generate_wasm_header
+  5 generate_wasm_globals
+  "test_func" generate_wasm_function
+  "    i32.const 1" print
+  "    i32.const 2" print
+  "    i32.add" print
+  "    drop" print
+  generate_wasm_footer
+;
