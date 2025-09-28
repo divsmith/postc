@@ -8,9 +8,10 @@ Standalone VM that executes compiled PostC bytecode files.
 import sys
 import os
 import json
+import traceback
 from enum import Enum
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Any
 
 # Opcode definitions (duplicated for standalone VM)
 class Opcode(Enum):
@@ -59,8 +60,9 @@ class Opcode(Enum):
 
 # VM error
 class VmError(Exception):
-    def __init__(self, message: str):
-        super().__init__(f"VM error: {message}")
+    def __init__(self, message: str, line: int = 0):
+        super().__init__(f"VM error at line {line}: {message}")
+        self.line = line
 
 # Instruction (simplified for execution)
 @dataclass
@@ -80,7 +82,7 @@ class Instruction:
         try:
             opcode = Opcode(opcode_str)
         except ValueError:
-            raise VmError(f"Unknown opcode: {opcode_str}")
+            raise ValueError(f"Unknown opcode: {opcode_str}")
         
         # Convert operand if present
         operand = None
@@ -94,7 +96,9 @@ class Instruction:
                 except ValueError:
                     operand = operand_str
         
-        return cls(opcode, operand)
+        # Extract line number from instruction string if available
+        # For now, we'll just use 0 as default
+        return cls(opcode, operand, 0)
 
 # Function
 @dataclass
@@ -110,6 +114,7 @@ class Frame:
     instructions: List[Instruction]
     pc: int = 0
     base_pointer: int = 0
+    variables: Dict[str, Union[int, float, str, bool]] = field(default_factory=dict)
 
 # Virtual Machine
 class VM:
@@ -118,6 +123,8 @@ class VM:
         self.functions = functions
         self.stack: List[Union[int, float, str, bool]] = []
         self.call_stack: List[Frame] = []
+        self.global_variables: Dict[str, Union[int, float, str, bool]] = {}
+        self.debug_mode = False
         
     def push(self, value: Union[int, float, str, bool]):
         """Push a value onto the stack."""
@@ -126,20 +133,32 @@ class VM:
     def pop(self) -> Union[int, float, str, bool]:
         """Pop a value from the stack."""
         if not self.stack:
-            raise VmError("Stack underflow")
+            raise VmError("Stack underflow", self.get_current_line())
         return self.stack.pop()
         
     def peek(self) -> Union[int, float, str, bool]:
         """Peek at the top value on the stack."""
         if not self.stack:
-            raise VmError("Stack underflow")
+            raise VmError("Stack underflow", self.get_current_line())
         return self.stack[-1]
+        
+    def enable_debug_mode(self):
+        """Enable debug mode which provides more detailed output."""
+        self.debug_mode = True
+        
+    def get_current_line(self) -> int:
+        """Get the line number of the current instruction."""
+        if self.call_stack:
+            frame = self.call_stack[-1]
+            if frame.pc > 0 and frame.pc <= len(frame.instructions):
+                return frame.instructions[frame.pc - 1].line
+        return 0
         
     def run(self):
         """Execute the program."""
         main_func = self.functions.get("main")
         if not main_func:
-            raise VmError("Function 'main' not found")
+            raise VmError("Function 'main' not found", 0)
             
         # Set up the initial frame for the main function
         self.call_stack.append(Frame(main_func.instructions))
@@ -153,16 +172,20 @@ class VM:
                 continue
                 
             instruction = frame.instructions[frame.pc]
+            if self.debug_mode:
+                print(f"[DEBUG] Executing: {instruction.opcode.value} {instruction.operand if instruction.operand is not None else ''} at line {instruction.line}")
+                
             frame.pc += 1
             self.execute_instruction(instruction)
             
     def execute_instruction(self, instruction: Instruction):
         """Execute a single instruction."""
         opcode = instruction.opcode
+        line = instruction.line
         
         if opcode == Opcode.LOAD_CONST:
             if instruction.operand is None or not isinstance(instruction.operand, int) or instruction.operand >= len(self.constants):
-                raise VmError("Invalid constant index")
+                raise VmError("Invalid constant index", line)
             self.push(self.constants[instruction.operand])
             
         elif opcode == Opcode.LOAD_TRUE:
@@ -173,25 +196,35 @@ class VM:
             
         elif opcode == Opcode.LOAD_STRING:
             if instruction.operand is None or not isinstance(instruction.operand, int) or instruction.operand >= len(self.constants):
-                raise VmError("Invalid string index")
+                raise VmError("Invalid string index", line)
             self.push(self.constants[instruction.operand])
             
         elif opcode == Opcode.LOAD_VAR:
             if instruction.operand is None or not isinstance(instruction.operand, int) or instruction.operand >= len(self.constants):
-                raise VmError("Invalid variable index")
+                raise VmError("Invalid variable index", line)
             var_name = self.constants[instruction.operand]
-            # For now, we'll use a simple global variable model
-            # A full implementation would use stack-based local variables
-            if var_name not in self.get_current_frame_variables():
-                raise VmError(f"Variable '{var_name}' not found")
-            self.push(self.get_current_frame_variables()[var_name])
+            
+            # Look for variable in current frame first, then global
+            current_frame = self.call_stack[-1] if self.call_stack else None
+            if current_frame and var_name in current_frame.variables:
+                self.push(current_frame.variables[var_name])
+            elif var_name in self.global_variables:
+                self.push(self.global_variables[var_name])
+            else:
+                raise VmError(f"Variable '{var_name}' not found", line)
             
         elif opcode == Opcode.STORE_VAR:
             if instruction.operand is None or not isinstance(instruction.operand, int) or instruction.operand >= len(self.constants):
-                raise VmError("Invalid variable index")
+                raise VmError("Invalid variable index", line)
             var_name = self.constants[instruction.operand]
             value = self.pop()
-            self.get_current_frame_variables()[var_name] = value
+            
+            # Store in current frame's local variables (for proper scoping)
+            if self.call_stack:
+                self.call_stack[-1].variables[var_name] = value
+            else:
+                # Fallback to global if no frames
+                self.global_variables[var_name] = value
             
         elif opcode == Opcode.DUP:
             value = self.peek()
@@ -202,7 +235,7 @@ class VM:
             
         elif opcode == Opcode.SWAP:
             if len(self.stack) < 2:
-                raise VmError("Not enough values on stack for SWAP")
+                raise VmError("Not enough values on stack for SWAP", line)
             a = self.pop()
             b = self.pop()
             self.push(a)
@@ -210,7 +243,7 @@ class VM:
             
         elif opcode == Opcode.OVER:
             if len(self.stack) < 2:
-                raise VmError("Not enough values on stack for OVER")
+                raise VmError("Not enough values on stack for OVER", line)
             a = self.pop()
             b = self.peek()
             self.push(a)
@@ -218,7 +251,7 @@ class VM:
             
         elif opcode == Opcode.ROT:
             if len(self.stack) < 3:
-                raise VmError("Not enough values on stack for ROT")
+                raise VmError("Not enough values on stack for ROT", line)
             a = self.pop()
             b = self.pop()
             c = self.pop()
@@ -232,7 +265,7 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a + b)
             else:
-                raise VmError("Invalid types for addition")
+                raise VmError(f"Invalid types for addition: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.SUB:
             b = self.pop()
@@ -240,7 +273,7 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a - b)
             else:
-                raise VmError("Invalid types for subtraction")
+                raise VmError(f"Invalid types for subtraction: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.MUL:
             b = self.pop()
@@ -248,17 +281,17 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a * b)
             else:
-                raise VmError("Invalid types for multiplication")
+                raise VmError(f"Invalid types for multiplication: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.DIV:
             b = self.pop()
             a = self.pop()
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 if b == 0:
-                    raise VmError("Division by zero")
+                    raise VmError("Division by zero", line)
                 self.push(a / b if isinstance(a, float) or isinstance(b, float) else a // b)
             else:
-                raise VmError("Invalid types for division")
+                raise VmError(f"Invalid types for division: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.EQ:
             b = self.pop()
@@ -276,7 +309,7 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a < b)
             else:
-                raise VmError("Invalid types for comparison")
+                raise VmError(f"Invalid types for comparison: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.GT:
             b = self.pop()
@@ -284,7 +317,7 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a > b)
             else:
-                raise VmError("Invalid types for comparison")
+                raise VmError(f"Invalid types for comparison: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.LE:
             b = self.pop()
@@ -292,7 +325,7 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a <= b)
             else:
-                raise VmError("Invalid types for comparison")
+                raise VmError(f"Invalid types for comparison: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.GE:
             b = self.pop()
@@ -300,7 +333,7 @@ class VM:
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 self.push(a >= b)
             else:
-                raise VmError("Invalid types for comparison")
+                raise VmError(f"Invalid types for comparison: {type(a).__name__} and {type(b).__name__}", line)
                 
         elif opcode == Opcode.PRINT:
             value = self.pop()
@@ -308,22 +341,22 @@ class VM:
             
         elif opcode == Opcode.JUMP:
             if instruction.operand is None or not isinstance(instruction.operand, int):
-                raise VmError("Invalid jump target")
+                raise VmError("Invalid jump target", line)
             self.call_stack[-1].pc = instruction.operand
             
         elif opcode == Opcode.JUMP_IF_FALSE:
             if instruction.operand is None or not isinstance(instruction.operand, int):
-                raise VmError("Invalid jump target")
+                raise VmError("Invalid jump target", line)
             condition = self.pop()
             if not condition:
                 self.call_stack[-1].pc = instruction.operand
 
         elif opcode == Opcode.CALL:
             if instruction.operand is None or not isinstance(instruction.operand, int) or instruction.operand >= len(self.constants):
-                raise VmError("Invalid function index")
+                raise VmError("Invalid function index", line)
             func_name = self.constants[instruction.operand]
             if func_name not in self.functions:
-                raise VmError(f"Function '{func_name}' not found")
+                raise VmError(f"Function '{func_name}' not found", line)
                 
             func = self.functions[func_name]
             
@@ -351,15 +384,7 @@ class VM:
                 self.call_stack.pop()
             
         else:
-            raise VmError(f"Unknown opcode: {opcode}")
-
-    def get_current_frame_variables(self) -> Dict[str, Union[int, float, str, bool]]:
-        """Get the variables for the current frame."""
-        # This is a simplified approach. A full implementation would use a more robust
-        # variable management system.
-        if not hasattr(self, "_variables"):
-            self._variables = {}
-        return self._variables
+            raise VmError(f"Unknown opcode: {opcode}", line)
 
 def load_bytecode_from_file(filename: str) -> dict:
     """Load compiled bytecode from a file."""
@@ -371,10 +396,14 @@ def create_functions_from_bytecode(functions_data: dict) -> Dict[str, Function]:
     functions = {}
     for name, func_data in functions_data.items():
         # Convert instruction strings to Instruction objects
-        instructions = [
-            Instruction.from_string(instr_str) 
-            for instr_str in func_data["instructions"]
-        ]
+        instructions = []
+        for instr_str in func_data["instructions"]:
+            try:
+                instruction = Instruction.from_string(instr_str)
+                instructions.append(instruction)
+            except ValueError as e:
+                print(f"Warning: {e}")
+                continue
         
         functions[name] = Function(
             name=func_data["name"],
@@ -383,7 +412,7 @@ def create_functions_from_bytecode(functions_data: dict) -> Dict[str, Function]:
         )
     return functions
 
-def run_bytecode_file(filename: str):
+def run_bytecode_file(filename: str, debug: bool = False):
     """Load and run a compiled PostC bytecode file."""
     print(f"Loading bytecode from {filename}...")
     
@@ -396,6 +425,8 @@ def run_bytecode_file(filename: str):
     # Create VM and run
     print("Running program...")
     vm = VM(bytecode["constants"], functions)
+    if debug:
+        vm.enable_debug_mode()
     vm.run()
     
     print("Program finished.")
@@ -403,7 +434,7 @@ def run_bytecode_file(filename: str):
 def main():
     """Main function."""
     if len(sys.argv) < 2:
-        print("Usage: python3 vm.py <bytecode_file>")
+        print("Usage: python3 vm.py <bytecode_file> [-d|--debug]")
         return
         
     filename = sys.argv[1]
@@ -411,10 +442,14 @@ def main():
         print(f"Error: File '{filename}' not found")
         return
         
+    debug = "-d" in sys.argv or "--debug" in sys.argv
+    
     try:
-        run_bytecode_file(filename)
+        run_bytecode_file(filename, debug)
     except Exception as e:
         print(f"Error: {e}")
+        if debug:
+            traceback.print_exc()
         sys.exit(1)
 
 if __name__ == '__main__':

@@ -2,36 +2,285 @@
 # Generates bytecode from the AST
 
 # Opcode definitions
-:OPCODE_LOAD_CONST 0 param ;
-:OPCODE_LOAD_TRUE 0 param ;
-:OPCODE_LOAD_FALSE 0 param ;
-:OPCODE_LOAD_STRING 0 param ;
-:OPCODE_LOAD_VAR 0 param ;
-:OPCODE_STORE_VAR 0 param ;
-:OPCODE_DUP 0 param ;
-:OPCODE_DROP 0 param ;
-:OPCODE_SWAP 0 param ;
-:OPCODE_OVER 0 param ;
-:OPCODE_ROT 0 param ;
-:OPCODE_ADD 0 param ;
-:OPCODE_SUB 0 param ;
-:OPCODE_MUL 0 param ;
-:OPCODE_DIV 0 param ;
-:OPCODE_EQ 0 param ;
-:OPCODE_NE 0 param ;
-:OPCODE_LT 0 param ;
-:OPCODE_GT 0 param ;
-:OPCODE_LE 0 param ;
-:OPCODE_GE 0 param ;
-:OPCODE_JUMP 0 param ;
-:OPCODE_JUMP_IF_FALSE 0 param ;
-:OPCODE_CALL 0 param ;
-:OPCODE_RETURN 0 param ;
-:OPCODE_PRINT 0 param ;
-:OPCODE_HALT 0 param ;
+:OPCODE_LOAD_CONST 0 param "LOAD_CONST" ;
+:OPCODE_LOAD_TRUE 0 param "LOAD_TRUE" ;
+:OPCODE_LOAD_FALSE 0 param "LOAD_FALSE" ;
+:OPCODE_LOAD_STRING 0 param "LOAD_STRING" ;
+:OPCODE_LOAD_VAR 0 param "LOAD_VAR" ;
+:OPCODE_STORE_VAR 0 param "STORE_VAR" ;
+:OPCODE_DUP 0 param "DUP" ;
+:OPCODE_DROP 0 param "DROP" ;
+:OPCODE_SWAP 0 param "SWAP" ;
+:OPCODE_OVER 0 param "OVER" ;
+:OPCODE_ROT 0 param "ROT" ;
+:OPCODE_ADD 0 param "ADD" ;
+:OPCODE_SUB 0 param "SUB" ;
+:OPCODE_MUL 0 param "MUL" ;
+:OPCODE_DIV 0 param "DIV" ;
+:OPCODE_EQ 0 param "EQ" ;
+:OPCODE_NE 0 param "NE" ;
+:OPCODE_LT 0 param "LT" ;
+:OPCODE_GT 0 param "GT" ;
+:OPCODE_LE 0 param "LE" ;
+:OPCODE_GE 0 param "GE" ;
+:OPCODE_JUMP 0 param "JUMP" ;
+:OPCODE_JUMP_IF_FALSE 0 param "JUMP_IF_FALSE" ;
+:OPCODE_CALL 0 param "CALL" ;
+:OPCODE_RETURN 0 param "RETURN" ;
+:OPCODE_PRINT 0 param "PRINT" ;
+:OPCODE_HALT 0 param "HALT" ;
+
+# Code generator state
+:current_function 0 param 0 ;
+:functions 0 param 0 ;
+:constants 0 param 0 ;
+:instructions 0 param 0 ;
+
+# Initialize the code generator
+:codegen_init 0 param
+  "Initializing code generator" print
+  # Initialize data structures
+  0 current_function store
+  "functions_list" functions store
+  "constants_list" constants store
+  "instructions_list" instructions store
+;
+
+# Add a constant to the constants pool
+:codegen_add_constant 1 param value
+  "Adding constant: " print
+  value print
+  # In a real implementation, this would add to constants list and return index
+  0  # Return dummy index for now
+;
+
+# Emit an instruction to the current function
+:codegen_emit 2 param opcode operand
+  "Emitting: " print
+  opcode print
+  " " print
+  operand print
+  print
+  # In a real implementation, this would add to instructions list
+;
+
+# Generate code for a program (list of AST nodes)
+:codegen_generate_program 1 param ast_nodes
+  "Generating code for program" print
+  
+  # Process all function declarations first
+  # In a full implementation, we'd iterate through the list
+  "Processing functions" print
+  
+  # Process main program
+  "Processing main program" print
+  ast_nodes codegen_generate_statements
+;
+
+# Generate code for a list of statements
+:codegen_generate_statements 1 param stmt_list
+  "Generating code for statements" print
+  # In a real implementation, this would iterate through statements
+  # For now, just a placeholder
+;
+
+# Generate code for a single statement
+:codegen_generate_statement 1 param stmt
+  stmt "AST type: " print stmt print print
+  stmt AST_FUNCTION_DECL == if
+    stmt codegen_generate_function
+  else
+    stmt AST_VARIABLE_DECL == if
+      stmt codegen_generate_variable_decl
+    else
+      stmt AST_RPN_EXPRESSION == if
+        stmt codegen_generate_rpn_expression
+      else
+        stmt AST_IF_EXPR == if
+          stmt codegen_generate_if_expr
+        else
+          stmt AST_WHILE_LOOP == if
+            stmt codegen_generate_while_loop
+          else
+            stmt AST_FOR_LOOP == if
+              stmt codegen_generate_for_loop
+            else
+              "Unknown statement type" print
+            ;
+          ;
+        ;
+      ;
+    ;
+  ;
+;
+
+# Generate code for a function declaration
+:codegen_generate_function 1 param func_node
+  "Generating function code" print
+  # In a real implementation, this would extract function info from AST node
+  # Create new function, generate body, etc.
+;
+
+# Generate code for a variable declaration
+:codegen_generate_variable_decl 1 param var_node
+  "Generating variable declaration code" print
+  # In a real implementation, this would:
+  # 1. Generate code for the value expression
+  # 2. Store the result in the variable
+;
+
+# Generate code for an RPN expression
+:codegen_generate_rpn_expression 1 param expr_node
+  "Generating RPN expression code" print
+  # This is the core of the code generation
+  # For now, print the node to see what we have
+  expr_node print
+  
+  # In a real implementation, this would parse the RPN expression
+  # and generate appropriate bytecode instructions
+;
+
+# Generate code for an if expression
+:codegen_generate_if_expr 1 param if_node
+  "Generating if expression code" print
+  # In a real implementation:
+  # 1. Generate code for condition
+  # 2. Generate conditional jump to else part
+  # 3. Generate then part
+  # 4. Jump over else part
+  # 5. Generate else part
+;
+
+# Generate code for a while loop
+:codegen_generate_while_loop 1 param while_node
+  "Generating while loop code" print
+  # In a real implementation:
+  # 1. Create loop label
+  # 2. Generate condition code
+  # 3. Generate conditional jump to end
+  # 4. Generate body code
+  # 5. Jump back to start
+;
+
+# Generate code for a for loop
+:codegen_generate_for_loop 1 param for_node
+  "Generating for loop code" print
+  # In a real implementation:
+  # 1. Initialize counter variable
+  # 2. Create loop label
+  # 3. Check counter condition
+  # 4. Generate conditional jump to end
+  # 5. Generate body code
+  # 6. Decrement counter
+  # 7. Jump back to start
+;
+
+# Generate code for an integer literal
+:codegen_generate_integer_literal 1 param value
+  value codegen_add_constant OPCODE_LOAD_CONST codegen_emit
+;
+
+# Generate code for a string literal
+:codegen_generate_string_literal 1 param value
+  value codegen_add_constant OPCODE_LOAD_STRING codegen_emit
+;
+
+# Generate code for a variable load
+:codegen_generate_load_var 1 param var_name
+  var_name codegen_add_constant OPCODE_LOAD_VAR codegen_emit
+;
+
+# Generate code for a variable store
+:codegen_generate_store_var 1 param var_name
+  var_name codegen_add_constant OPCODE_STORE_VAR codegen_emit
+;
+
+# Generate code for arithmetic operations
+:codegen_generate_add 0 param
+  OPCODE_ADD 0 codegen_emit
+;
+
+:codegen_generate_sub 0 param
+  OPCODE_SUB 0 codegen_emit
+;
+
+:codegen_generate_mul 0 param
+  OPCODE_MUL 0 codegen_emit
+;
+
+:codegen_generate_div 0 param
+  OPCODE_DIV 0 codegen_emit
+;
+
+# Generate code for comparison operations
+:codegen_generate_eq 0 param
+  OPCODE_EQ 0 codegen_emit
+;
+
+:codegen_generate_ne 0 param
+  OPCODE_NE 0 codegen_emit
+;
+
+:codegen_generate_lt 0 param
+  OPCODE_LT 0 codegen_emit
+;
+
+:codegen_generate_gt 0 param
+  OPCODE_GT 0 codegen_emit
+;
+
+:codegen_generate_le 0 param
+  OPCODE_LE 0 codegen_emit
+;
+
+:codegen_generate_ge 0 param
+  OPCODE_GE 0 codegen_emit
+;
+
+# Generate code for stack operations
+:codegen_generate_dup 0 param
+  OPCODE_DUP 0 codegen_emit
+;
+
+:codegen_generate_drop 0 param
+  OPCODE_DROP 0 codegen_emit
+;
+
+:codegen_generate_swap 0 param
+  OPCODE_SWAP 0 codegen_emit
+;
+
+:codegen_generate_over 0 param
+  OPCODE_OVER 0 codegen_emit
+;
+
+:codegen_generate_rot 0 param
+  OPCODE_ROT 0 codegen_emit
+;
+
+# Generate print instruction
+:codegen_generate_print 0 param
+  OPCODE_PRINT 0 codegen_emit
+;
+
+# Main code generation function
+:generate_code 1 param ast
+  "Starting code generation..." print
+  
+  # Initialize code generator
+  codegen_init
+  
+  # Generate code for the AST
+  ast codegen_generate_program
+  
+  # Add HALT instruction at the end
+  OPCODE_HALT 0 codegen_emit
+  
+  "Code generation finished" print
+;
 
 # Test code generator
 :codegen_test 0 param
-  "Testing code generator" print
-  OPCODE_HALT print
+  "Testing code generator with dummy AST" print
+  "dummy_ast" generate_code
 ;

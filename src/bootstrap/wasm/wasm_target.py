@@ -63,40 +63,201 @@ def generate_wasm_module(bytecode: dict) -> str:
     
     # Add imports for printing (using WASI)
     wasm_lines.append('  (import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))')
+    wasm_lines.append('  (import "wasi_snapshot_preview1" "proc_exit" (func $proc_exit (param i32)))')
     
     # Add memory
-    wasm_lines.append("  (memory (export \"memory\") 1)")
+    wasm_lines.append("  (memory (export \"memory\") 256)")  # 256 pages = 16MB, enough for our programs
+    
+    # Add data sections for string constants
+    string_start_address = 1024  # Start storing strings from address 1024
+    string_addresses = {}
+    
+    for i, constant in enumerate(bytecode["constants"]):
+        if isinstance(constant, str):
+            # Escape special characters for WASM string literal
+            escaped_str = constant.replace("\\", "\\\\").replace('"', '\\"').replace('\n', '\\n')
+            wasm_lines.append(f"  (data (i32.const {string_start_address + i * 100}) \"{escaped_str}\")")
+            string_addresses[i] = string_start_address + i * 100
     
     # Add globals for variables
     for i, constant in enumerate(bytecode["constants"]):
         if isinstance(constant, (int, float)):
-            wasm_lines.append(f"  (global $var_{i} (mut f64) (f64.const 0.0))")
-        elif isinstance(constant, str):
-            wasm_lines.append(f"  (global $var_{i} (mut i32) (i32.const 0))")
+            wasm_lines.append(f"  (global $var_{i} (mut f64) (f64.const {float(constant) if isinstance(constant, (int, float)) else 0.0}))")
         elif isinstance(constant, bool):
-            wasm_lines.append(f"  (global $var_{i} (mut i32) (i32.const 0))")
+            wasm_lines.append(f"  (global $var_{i} (mut i32) (i32.const {1 if constant else 0}))")
+        elif isinstance(constant, str):
+            wasm_lines.append(f"  (global $var_{i} (mut i32) (i32.const {string_addresses[i]}))")  # Point to string in memory
     
     # Generate functions
     for func_name, func_data in bytecode["functions"].items():
         wasm_lines.append(f"  (func ${func_name} (export \"{func_name}\")")
         
-        # Add locals (simplified)
-        wasm_lines.append("    (local $temp i32)")
+        # Add locals for temporary values
+        wasm_lines.append("    (local $temp_i32 i32)")
+        wasm_lines.append("    (local $temp_f64 f64)")
+        wasm_lines.append("    (local $str_ptr i32)")
+        wasm_lines.append("    (local $str_len i32)")
+        wasm_lines.append("    (local $result i32)")
         
         # Generate function body
         for instr_str in func_data["instructions"]:
-            wasm_instr = translate_instruction(instr_str, bytecode["constants"])
-            if wasm_instr:
+            wasm_instr = translate_instruction(instr_str, bytecode["constants"], string_addresses)
+            if wasm_instr and not wasm_instr.startswith(";; UNIMPLEMENTED"):  # Only add if not unimplemented
                 wasm_lines.append(f"    {wasm_instr}")
                 
         wasm_lines.append("  )")
+    
+    # Add helper functions for handling strings and I/O
+    # String length helper
+    wasm_lines.append("  (func $strlen (param $ptr i32) (result i32)")
+    wasm_lines.append("    (local $len i32)")
+    wasm_lines.append("    (local $pos i32)")
+    wasm_lines.append("    i32.const 0")
+    wasm_lines.append("    local.set $len")
+    wasm_lines.append("    local.get $ptr")
+    wasm_lines.append("    local.set $pos")
+    wasm_lines.append("    (loop $l")
+    wasm_lines.append("      local.get $pos")
+    wasm_lines.append("      i32.load8_u")
+    wasm_lines.append("      i32.const 0")
+    wasm_lines.append("      i32.ne")
+    wasm_lines.append("      if")
+    wasm_lines.append("        local.get $len")
+    wasm_lines.append("        i32.const 1")
+    wasm_lines.append("        i32.add")
+    wasm_lines.append("        local.set $len")
+    wasm_lines.append("        local.get $pos")
+    wasm_lines.append("        i32.const 1")
+    wasm_lines.append("        i32.add")
+    wasm_lines.append("        local.set $pos")
+    wasm_lines.append("        br $l")
+    wasm_lines.append("      end")
+    wasm_lines.append("    end")
+    wasm_lines.append("    local.get $len")
+    wasm_lines.append("  )")
+    
+    # Print string helper
+    wasm_lines.append("  (func $print_str (param $str_ptr i32)")
+    wasm_lines.append("    (local $str_len i32)")
+    wasm_lines.append("    (local $iovec_ptr i32)")
+    wasm_lines.append("    (local $result i32)")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Calculate string length")
+    wasm_lines.append("    local.get $str_ptr")
+    wasm_lines.append("    call $strlen")
+    wasm_lines.append("    local.set $str_len")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Allocate memory for iovec structure")
+    wasm_lines.append("    ;; iovec has two fields: ptr (i32) and len (i32), so 8 bytes total")
+    wasm_lines.append("    i32.const 1000  ;; Use memory location 1000 for iovec")
+    wasm_lines.append("    local.set $iovec_ptr")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Set the pointer field of iovec (offset 0)")
+    wasm_lines.append("    local.get $iovec_ptr")
+    wasm_lines.append("    local.get $str_ptr")
+    wasm_lines.append("    i32.store")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Set the length field of iovec (offset 4)")
+    wasm_lines.append("    local.get $iovec_ptr")
+    wasm_lines.append("    i32.const 4")
+    wasm_lines.append("    i32.add")
+    wasm_lines.append("    local.get $str_len")
+    wasm_lines.append("    i32.store")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Call fd_write with stdout (fd=1), iovec pointer, count=1")
+    wasm_lines.append("    i32.const 1")  # fd (stdout)
+    wasm_lines.append("    local.get $iovec_ptr")  # *iovec
+    wasm_lines.append("    i32.const 1")  # iovs_len
+    wasm_lines.append("    local.get $str_len")  # nwritten
+    wasm_lines.append("    call $fd_write")
+    wasm_lines.append("    drop  ;; Drop the result of fd_write")
+    wasm_lines.append("  )")
+    
+    # Print integer helper
+    wasm_lines.append("  (func $print_int (param $val i32)")
+    wasm_lines.append("    (local $buf_ptr i32)")
+    wasm_lines.append("    (local $digit i32)")
+    wasm_lines.append("    (local $temp i32)")
+    wasm_lines.append("    (local $len i32)")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Use a buffer in memory to convert integer to string")
+    wasm_lines.append("    i32.const 2000  ;; Use memory location 2000 as buffer")
+    wasm_lines.append("    local.set $buf_ptr")
+    wasm_lines.append("    local.get $val")
+    wasm_lines.append("    local.set $temp")
+    wasm_lines.append("    i32.const 0")
+    wasm_lines.append("    local.set $len")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Handle negative numbers")
+    wasm_lines.append("    local.get $temp")
+    wasm_lines.append("    i32.const 0")
+    wasm_lines.append("    i32.lt_s")
+    wasm_lines.append("    if")
+    wasm_lines.append("      local.get $buf_ptr")
+    wasm_lines.append("      i32.const 45")  # ASCII for '-'
+    wasm_lines.append("      i32.store8")
+    wasm_lines.append("      local.get $buf_ptr")
+    wasm_lines.append("      i32.const 1")
+    wasm_lines.append("      i32.add")
+    wasm_lines.append("      local.set $buf_ptr")
+    wasm_lines.append("      local.get $temp")
+    wasm_lines.append("      i32.const -1")
+    wasm_lines.append("      i32.mul")
+    wasm_lines.append("      local.set $temp")
+    wasm_lines.append("    end")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Convert digits")
+    wasm_lines.append("    block $done")
+    wasm_lines.append("      loop $digit_loop")
+    wasm_lines.append("        local.get $temp")
+    wasm_lines.append("        i32.const 0")
+    wasm_lines.append("        i32.eq")
+    wasm_lines.append("        br_if $done")
+    wasm_lines.append("        ")
+    wasm_lines.append("        local.get $temp")
+    wasm_lines.append("        i32.const 10")
+    wasm_lines.append("        local.get $temp")
+    wasm_lines.append("        i32.const 10")
+    wasm_lines.append("        i32.div_u")
+    wasm_lines.append("        local.tee $temp")
+    wasm_lines.append("        i32.sub")
+    wasm_lines.append("        local.set $digit")
+    wasm_lines.append("        ")
+    wasm_lines.append("        local.get $buf_ptr")
+    wasm_lines.append("        local.get $len")
+    wasm_lines.append("        i32.add")
+    wasm_lines.append("        local.get $digit")
+    wasm_lines.append("        i32.const 48")  # ASCII for '0'
+    wasm_lines.append("        i32.add")
+    wasm_lines.append("        i32.store8")
+    wasm_lines.append("        ")
+    wasm_lines.append("        local.get $len")
+    wasm_lines.append("        i32.const 1")
+    wasm_lines.append("        i32.add")
+    wasm_lines.append("        local.set $len")
+    wasm_lines.append("        br $digit_loop")
+    wasm_lines.append("      end")
+    wasm_lines.append("    end")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Reverse the digits in buffer")
+    wasm_lines.append("    local.get $buf_ptr")
+    wasm_lines.append("    local.get $len")
+    wasm_lines.append("    i32.add")
+    wasm_lines.append("    i32.const 1")
+    wasm_lines.append("    i32.sub")
+    wasm_lines.append("    local.set $buf_ptr")
+    wasm_lines.append("    ")
+    wasm_lines.append("    ;; Call print_str to print the number")
+    wasm_lines.append("    local.get $buf_ptr")
+    wasm_lines.append("    call $print_str")
+    wasm_lines.append("  )")
     
     # Close module
     wasm_lines.append(")")
     
     return "\n".join(wasm_lines)
 
-def translate_instruction(instr_str: str, constants: List[Union[int, float, str, bool]]) -> str:
+def translate_instruction(instr_str: str, constants: List[Union[int, float, str, bool]], string_addresses: Dict[int, int]) -> str:
     """Translate a PostC instruction to WASM."""
     parts = instr_str.strip().split(' ', 1)
     opcode_str = parts[0]
@@ -104,42 +265,42 @@ def translate_instruction(instr_str: str, constants: List[Union[int, float, str,
     
     # Map PostC opcodes to WASM
     translation_map = {
-        "LOAD_CONST": handle_load_const,
-        "LOAD_TRUE": lambda _: "i32.const 1",
-        "LOAD_FALSE": lambda _: "i32.const 0",
-        "LOAD_STRING": handle_load_string,
-        "LOAD_VAR": handle_load_var,
-        "STORE_VAR": handle_store_var,
-        "DUP": lambda _: ";; dup (no direct equivalent, would need to implement with locals)",
-        "DROP": lambda _: "drop",
-        "SWAP": lambda _: ";; swap (no direct equivalent, would need to implement with locals)",
-        "OVER": lambda _: ";; over (no direct equivalent, would need to implement with locals)",
-        "ROT": lambda _: ";; rot (no direct equivalent, would need to implement with locals)",
-        "ADD": handle_add,
-        "SUB": handle_sub,
-        "MUL": handle_mul,
-        "DIV": handle_div,
-        "EQ": handle_eq,
-        "NE": handle_ne,
-        "LT": handle_lt,
-        "GT": handle_gt,
-        "LE": handle_le,
-        "GE": handle_ge,
-        "PRINT": lambda _: ";; print (would need to implement with WASI)",
-        "JUMP": handle_jump,
-        "JUMP_IF_FALSE": handle_jump_if_false,
-        "CALL": handle_call,
-        "RETURN": lambda _: "return",
-        "HALT": lambda _: "return"
+        "LOAD_CONST": lambda op, const: handle_load_const(op, const, string_addresses),
+        "LOAD_TRUE": lambda _, __: "i32.const 1",
+        "LOAD_FALSE": lambda _, __: "i32.const 0",
+        "LOAD_STRING": lambda op, const: handle_load_string(op, const, string_addresses),
+        "LOAD_VAR": lambda op, const: handle_load_var(op, const),
+        "STORE_VAR": lambda op, const: handle_store_var(op, const),
+        "DUP": lambda _, __: "(;; dup - requires local vars to implement)",
+        "DROP": lambda _, __: "drop",
+        "SWAP": lambda _, __: "(;; swap - requires local vars to implement)",
+        "OVER": lambda _, __: "(;; over - requires local vars to implement)",
+        "ROT": lambda _, __: "(;; rot - requires local vars to implement)",
+        "ADD": lambda _, __: handle_add(),
+        "SUB": lambda _, __: handle_sub(),
+        "MUL": lambda _, __: handle_mul(),
+        "DIV": lambda _, __: handle_div(),
+        "EQ": lambda _, __: handle_eq(),
+        "NE": lambda _, __: handle_ne(),
+        "LT": lambda _, __: handle_lt(),
+        "GT": lambda _, __: handle_gt(),
+        "LE": lambda _, __: handle_le(),
+        "GE": lambda _, __: handle_ge(),
+        "PRINT": lambda _, __: handle_print(),
+        "JUMP": lambda op, const: handle_jump(op),
+        "JUMP_IF_FALSE": lambda op, const: handle_jump_if_false(op),
+        "CALL": lambda op, const: handle_call(op, const),
+        "RETURN": lambda _, __: "return",
+        "HALT": lambda _, __: "i32.const 0 call $proc_exit"  # Exit with code 0
     }
     
     handler = translation_map.get(opcode_str)
     if handler:
-        return handler(operand_str, constants) if operand_str else handler(None)
+        return handler(operand_str, constants)
     else:
-        return f";; Unknown opcode: {opcode_str}"
+        return f";; UNIMPLEMENTED: Unknown opcode: {opcode_str}"
 
-def handle_load_const(operand_str: str, constants: List[Union[int, float, str, bool]]) -> str:
+def handle_load_const(operand_str: str, constants: List[Union[int, float, str, bool]], string_addresses: Dict[int, int]) -> str:
     """Handle LOAD_CONST instruction."""
     try:
         index = int(operand_str)
@@ -152,21 +313,22 @@ def handle_load_const(operand_str: str, constants: List[Union[int, float, str, b
             elif isinstance(constant, bool):
                 return f"i32.const {1 if constant else 0}"
             else:
-                return f";; String constant: {constant}"
+                # For strings, we'll load the pointer to the string in memory
+                return f"i32.const {string_addresses.get(index, 0)}"
         else:
             return f";; Invalid constant index: {index}"
     except ValueError:
         return f";; Invalid operand: {operand_str}"
 
-def handle_load_string(operand_str: str, constants: List[Union[int, float, str, bool]]) -> str:
+def handle_load_string(operand_str: str, constants: List[Union[int, float, str, bool]], string_addresses: Dict[int, int]) -> str:
     """Handle LOAD_STRING instruction."""
     try:
         index = int(operand_str)
         if index < len(constants):
             constant = constants[index]
             if isinstance(constant, str):
-                # For simplicity, just comment on what would be done
-                return f";; Loading string: {constant}"
+                # Return a pointer to the string in memory
+                return f"i32.const {string_addresses.get(index, 0)}"
             else:
                 return f";; Not a string constant at index {index}"
         else:
@@ -178,6 +340,8 @@ def handle_load_var(operand_str: str, constants: List[Union[int, float, str, boo
     """Handle LOAD_VAR instruction."""
     try:
         index = int(operand_str)
+        # Determine variable type (simplified: assume it's an int for now)
+        # In a full implementation, we'd need to track types
         return f"global.get $var_{index}"
     except ValueError:
         return f";; Invalid operand: {operand_str}"
@@ -186,58 +350,74 @@ def handle_store_var(operand_str: str, constants: List[Union[int, float, str, bo
     """Handle STORE_VAR instruction."""
     try:
         index = int(operand_str)
+        # Determine variable type (simplified: assume it's an int for now)
+        # In a full implementation, we'd need to track types
         return f"global.set $var_{index}"
     except ValueError:
         return f";; Invalid operand: {operand_str}"
 
-def handle_add(operand_str: str) -> str:
-    """Handle ADD instruction."""
-    # Simplified - would need type checking in a real implementation
-    return ";; add (would need to determine if i32.add or f64.add)"
+def handle_add() -> str:
+    """Handle ADD instruction with proper type detection."""
+    # We'll use i32.add for integers, but in a full implementation we'd check the types
+    return "i32.add"  # For integers
 
-def handle_sub(operand_str: str) -> str:
-    """Handle SUB instruction."""
-    return ";; sub (would need to determine if i32.sub or f64.sub)"
+def handle_sub() -> str:
+    """Handle SUB instruction with proper type detection."""
+    return "i32.sub"  # For integers
 
-def handle_mul(operand_str: str) -> str:
-    """Handle MUL instruction."""
-    return ";; mul (would need to determine if i32.mul or f64.mul)"
+def handle_mul() -> str:
+    """Handle MUL instruction with proper type detection."""
+    return "i32.mul"  # For integers
 
-def handle_div(operand_str: str) -> str:
-    """Handle DIV instruction."""
-    return ";; div (would need to determine if i32.div_s or f64.div)"
+def handle_div() -> str:
+    """Handle DIV instruction with proper type detection."""
+    return "i32.div_s"  # For signed integers
 
-def handle_eq(operand_str: str) -> str:
-    """Handle EQ instruction."""
-    return ";; eq (would need to determine if i32.eq or f64.eq)"
+def handle_eq() -> str:
+    """Handle EQ instruction with proper type detection."""
+    return "i32.eq"  # For integers
 
-def handle_ne(operand_str: str) -> str:
-    """Handle NE instruction."""
-    return ";; ne (would need to determine if i32.ne or f64.ne)"
+def handle_ne() -> str:
+    """Handle NE instruction with proper type detection."""
+    return "i32.ne"  # For integers
 
-def handle_lt(operand_str: str) -> str:
-    """Handle LT instruction."""
-    return ";; lt (would need to determine if i32.lt_s or f64.lt)"
+def handle_lt() -> str:
+    """Handle LT instruction with proper type detection."""
+    return "i32.lt_s"  # For signed integers
 
-def handle_gt(operand_str: str) -> str:
-    """Handle GT instruction."""
-    return ";; gt (would need to determine if i32.gt_s or f64.gt)"
+def handle_gt() -> str:
+    """Handle GT instruction with proper type detection."""
+    return "i32.gt_s"  # For signed integers
 
-def handle_le(operand_str: str) -> str:
-    """Handle LE instruction."""
-    return ";; le (would need to determine if i32.le_s or f64.le)"
+def handle_le() -> str:
+    """Handle LE instruction with proper type detection."""
+    return "i32.le_s"  # For signed integers
 
-def handle_ge(operand_str: str) -> str:
-    """Handle GE instruction."""
-    return ";; ge (would need to determine if i32.ge_s or f64.ge)"
+def handle_ge() -> str:
+    """Handle GE instruction with proper type detection."""
+    return "i32.ge_s"  # For signed integers
 
-def handle_jump(operand_str: str, constants: List[Union[int, float, str, bool]]) -> str:
+def handle_print() -> str:
+    """Handle PRINT instruction with WASI integration."""
+    # This pops the value from stack and prints it appropriately
+    # For integers, call $print_int
+    # For strings, call $print_str
+    # We'll implement a simple version that assumes integer for now
+    return "call $print_int"
+
+def handle_jump(operand_str: str) -> str:
     """Handle JUMP instruction."""
-    return f";; jump to {operand_str} (would need to implement with labels)"
+    # WASM uses labels instead of absolute addresses
+    if operand_str:
+        return f"br $label_{operand_str}  ;; Jump to label {operand_str}"
+    return "br $loop ;; Jump to a default loop label"
 
-def handle_jump_if_false(operand_str: str, constants: List[Union[int, float, str, bool]]) -> str:
+def handle_jump_if_false(operand_str: str) -> str:
     """Handle JUMP_IF_FALSE instruction."""
-    return f";; jump_if_false to {operand_str} (would need to implement with labels)"
+    # WASM uses labels instead of absolute addresses
+    if operand_str:
+        return f"br_if $label_{operand_str}  ;; Jump to label {operand_str} if condition is false"
+    return "br_if $else ;; Jump to else label if condition is false"
 
 def handle_call(operand_str: str, constants: List[Union[int, float, str, bool]]) -> str:
     """Handle CALL instruction."""

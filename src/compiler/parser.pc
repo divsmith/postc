@@ -1,26 +1,239 @@
 # PostC Compiler - Parser
-# Parses tokens into an Abstract Syntax Tree (AST)
+# Parses tokens into Abstract Syntax Tree (AST)
 
 # AST node types
-:AST_PROGRAM 0 param ;
-:AST_FUNCTION_DECL 0 param ;
-:AST_VARIABLE_DECL 0 param ;
-:AST_BINARY_OP 0 param ;
-:AST_UNARY_OP 0 param ;
-:AST_CALL 0 param ;
-:AST_IF_EXPR 0 param ;
-:AST_WHILE_LOOP 0 param ;
-:AST_FOR_LOOP 0 param ;
-:AST_BLOCK 0 param ;
-:AST_INTEGER_LITERAL 0 param ;
-:AST_FLOAT_LITERAL 0 param ;
-:AST_STRING_LITERAL 0 param ;
-:AST_BOOLEAN_LITERAL 0 param ;
-:AST_IDENTIFIER 0 param ;
-:AST_STACK_OP 0 param ;
+:AST_PROGRAM 0 param "PROGRAM" ;
+:AST_FUNCTION_DECL 0 param "FUNCTION_DECL" ;
+:AST_VARIABLE_DECL 0 param "VARIABLE_DECL" ;
+:AST_ASSIGNMENT 0 param "ASSIGNMENT" ;
+:AST_BINARY_OP 0 param "BINARY_OP" ;
+:AST_UNARY_OP 0 param "UNARY_OP" ;
+:AST_CALL 0 param "CALL" ;
+:AST_IF_EXPR 0 param "IF_EXPR" ;
+:AST_WHILE_LOOP 0 param "WHILE_LOOP" ;
+:AST_FOR_LOOP 0 param "FOR_LOOP" ;
+:AST_BLOCK 0 param "BLOCK" ;
+:AST_INTEGER_LITERAL 0 param "INTEGER_LITERAL" ;
+:AST_FLOAT_LITERAL 0 param "FLOAT_LITERAL" ;
+:AST_STRING_LITERAL 0 param "STRING_LITERAL" ;
+:AST_BOOLEAN_LITERAL 0 param "BOOLEAN_LITERAL" ;
+:AST_IDENTIFIER 0 param "IDENTIFIER" ;
+:AST_ARRAY_LITERAL 0 param "ARRAY_LITERAL" ;
+:AST_DICT_LITERAL 0 param "DICT_LITERAL" ;
+:AST_STACK_OP 0 param "STACK_OP" ;
+:AST_RPN_EXPRESSION 0 param "RPN_EXPRESSION" ;
+
+# Parser state variables
+:current_token 0 param 0 ; # Current token being processed
+:tokens 0 param 0 ;        # List of tokens to parse
+:token_index 0 param 0 ;   # Current index in the token list
+
+# Initialize parser with tokens
+:parser_init 1 param token_list
+  "Initializing parser" print
+  token_list tokens store
+  0 token_index store
+  # Get first token
+  tokens load 0 get current_token store
+;
+
+# Advance to the next token
+:parser_advance 0 param
+  token_index load 1 + token_index store
+  # Check if we have more tokens
+  tokens load length token_index load < if
+    TOKEN_EOF current_token store  # Set to EOF if no more tokens
+  else
+    tokens load token_index load get current_token store
+  ;
+;
+
+# Expect a specific token type
+:parser_expect 1 param expected_type
+  current_token load expected_type != if
+    "Parse error: Expected " print
+    expected_type print
+    ", got " print
+    current_token load print
+    " at index " print
+    token_index load print
+    print
+  else
+    parser_advance
+  ;
+;
+
+# Parse a program (list of statements)
+:parser_parse_program 0 param
+  AST_PROGRAM
+  "Program:" print
+  
+  # Parse all statements until EOF
+  :stmt_loop 0 param
+    current_token load TOKEN_EOF != if
+      parser_parse_statement
+      stmt_loop  # Continue parsing statements
+    ;
+  ;
+  
+  stmt_loop
+;
+
+# Parse a single statement
+:parser_parse_statement 0 param
+  current_token load TOKEN_COLON == if
+    parser_parse_function_decl
+  else
+    current_token load TOKEN_LET current_token load TOKEN_VAR or == if
+      parser_parse_variable_decl
+    else
+      parser_parse_rpn_expression  # RPN expressions are the default
+    ;
+  ;
+;
+
+# Parse a function declaration
+:parser_parse_function_decl 0 param
+  parser_expect TOKEN_COLON  # Eat the ':'
+  
+  # Get function name
+  current_token load "Function name: " print current_token load print
+  parser_advance
+  
+  # Get parameter count
+  current_token load "Param count: " print current_token load print
+  parser_advance
+  
+  # Eat 'param'
+  parser_expect TOKEN_PARAM
+  
+  # Parse function body
+  # In a full implementation, this would parse the block
+  "Function body" print
+  
+  AST_FUNCTION_DECL
+;
+
+# Parse a variable declaration
+:parser_parse_variable_decl 0 param
+  # Get the var type (LET or VAR)
+  current_token load "Variable type: " print current_token load print
+  parser_advance
+  
+  # Get variable name
+  current_token load "Variable name: " print current_token load print
+  parser_advance
+  
+  # Parse the value expression
+  "Variable value" print
+  parser_parse_rpn_expression
+  
+  AST_VARIABLE_DECL
+;
+
+# Parse an RPN expression
+:parser_parse_rpn_expression 0 param
+  "Parsing RPN expression" print
+  
+  # Handle special constructs like if/else
+  current_token load TOKEN_IF == if
+    parser_parse_if_expr
+  else
+    current_token load TOKEN_WHILE == if
+      parser_parse_while_loop
+    else
+      current_token load TOKEN_FOR == if
+        parser_parse_for_loop
+      else
+        # Process tokens until we hit a statement separator
+        :expr_loop 0 param
+          current_token load TOKEN_SEMICOLON current_token load TOKEN_EOF current_token load TOKEN_ELSE or or != if
+            current_token load "Processing token: " print current_token load print
+            parser_advance
+            expr_loop
+          ;
+        ;
+        expr_loop
+        
+        AST_RPN_EXPRESSION
+      ;
+    ;
+  ;
+;
+
+# Parse an if expression
+:parser_parse_if_expr 0 param
+  parser_expect TOKEN_IF
+  
+  # Parse condition
+  "If condition" print
+  parser_parse_rpn_expression
+  
+  # Parse then branch
+  "Then branch" print
+  parser_parse_rpn_expression
+  
+  # Check for else branch
+  current_token load TOKEN_ELSE == if
+    parser_expect TOKEN_ELSE
+    "Else branch" print
+    parser_parse_rpn_expression
+  ;
+  
+  AST_IF_EXPR
+;
+
+# Parse a while loop
+:parser_parse_while_loop 0 param
+  parser_expect TOKEN_WHILE
+  
+  # Parse condition
+  "While condition" print
+  parser_parse_rpn_expression
+  
+  # Eat 'do'
+  parser_expect TOKEN_DO
+  
+  # Parse body
+  "While body" print
+  parser_parse_rpn_expression
+  
+  AST_WHILE_LOOP
+;
+
+# Parse a for loop
+:parser_parse_for_loop 0 param
+  parser_expect TOKEN_FOR
+  
+  # Parse count
+  "For count" print
+  parser_parse_rpn_expression
+  
+  # Parse body
+  "For body" print
+  parser_parse_rpn_expression
+  
+  AST_FOR_LOOP
+;
+
+# Parse token list and return AST
+:parse 1 param token_list
+  "Starting parser..." print
+  
+  # Initialize the parser
+  token_list parser_init
+  
+  # Parse the program
+  :result parser_parse_program
+  
+  "Parser finished" print
+  result
+;
 
 # Test parser
 :parser_test 0 param
-  "Testing parser" print
-  AST_PROGRAM print
+  # In a real implementation, we'd have token list from lexer
+  # For now, just demonstrate the functionality
+  "Testing parser with dummy token list" print
+  "dummy_token_list" parse
 ;

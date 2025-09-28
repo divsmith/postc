@@ -1,51 +1,242 @@
 # PostC Standard Library
+# Collection of utility functions for PostC programs
 
-# Add two numbers
+# Arithmetic functions
 :add 2 param
   +
 ;
 
-# Subtract two numbers
 :sub 2 param
   -
 ;
 
-# Multiply two numbers
 :mul 2 param
   *
 ;
 
-# Divide two numbers
 :div 2 param
   /
 ;
 
-# Print a value
-:print 1 param
-  drop
+# Comparison functions
+:eq 2 param
+  ==
 ;
 
-# Duplicate top stack element
+:ne 2 param
+  !=
+;
+
+:lt 2 param
+  <
+;
+
+:gt 2 param
+  >
+;
+
+:le 2 param
+  <=
+;
+
+:ge 2 param
+  >=
+;
+
+# Stack manipulation functions
 :dup 1 param
   dup
 ;
 
-# Drop top stack element
 :drop 1 param
   drop
 ;
 
-# Swap top two stack elements
 :swap 2 param
   swap
 ;
 
-# Copy second element to top
-:over 2 param
+:over 3 param
   over
 ;
 
-# Rotate top three elements
 :rot 3 param
   rot
 ;
+
+# Boolean logic functions
+:not 1 param
+  true eq
+;
+
+:and 2 param
+  if
+    dup
+  else
+    drop false
+  ;
+;
+
+:or 2 param
+  if
+    drop true
+  else
+    dup
+  ;
+;
+
+# Math functions
+:square 1 param
+  dup *
+;
+
+:cube 1 param
+  dup dup * *
+;
+
+:abs 1 param
+  dup 0 < if
+    -1 *
+  ;
+;
+
+:max 2 param
+  over over < if
+    swap drop
+  else
+    drop
+  ;
+;
+
+:min 2 param
+  over over > if
+    swap drop
+  else
+    drop
+  ;
+;
+
+# String functions
+:string_length 1 param
+  # This is a placeholder - actual implementation would require
+  # a string length primitive in the VM
+  "string_length" print
+;
+
+:string_concat 2 param
+  # This is a placeholder - actual implementation would require
+  # a string concatenation primitive in the VM
+  "string_concat" print
+;
+
+# List/array functions (conceptual)
+:list_create 1 param
+  # Creates an empty list with the given size
+  # This would require array support in the VM
+  "list_create" print
+;
+
+:list_get 2 param
+  # Gets element at index from list
+  # This would require array support in the VM
+  "list_get" print
+;
+
+:list_set 3 param
+  # Sets element at index in list
+  # This would require array support in the VM
+  "list_set" print
+;
+
+# Control flow helpers
+:if_else 3 param  # condition then_clause else_clause
+  if
+    drop  # Remove else clause
+    # Execute then clause
+  else
+    swap drop  # Remove then clause
+    # Execute else clause
+  ;
+;
+
+:while_do 2 param  # condition body
+  swap
+  :loop 0 param
+    2dup  # Duplicate both condition and body
+    exec  # Execute condition
+    if
+      # Execute body
+      exec
+      loop  # Continue loop
+    else
+      2drop  # Remove unused condition and body
+    ;
+  ;
+  loop
+;
+
+# Input/Output utilities
+:read_line 0 param
+  # This is a placeholder - would need read primitive in VM
+  "read_line" print
+;
+
+:print_int 1 param
+  print
+;
+
+:print_string 1 param
+  print
+;
+
+:print_bool 1 param
+  true eq if
+    "true" print
+  else
+    "false" print
+  ;
+;
+
+# Utility functions
+:identity 1 param
+  # Return the input unchanged
+;
+
+:const 2 param  # value ignored - return constant
+  swap drop
+;
+
+:apply 2 param  # function argument - apply function to argument
+  swap exec
+;
+
+# Testing function
+:stdlib_test 0 param
+  "PostC Standard Library Test" print
+  
+  # Test arithmetic
+  5 3 add print  # Should print 8
+  10 4 sub print # Should print 6
+  6 7 mul print  # Should print 42
+  15 3 div print # Should print 5
+  
+  # Test comparisons
+  5 3 gt print   # Should print true
+  2 8 lt print   # Should print true
+  
+  # Test stack ops
+  10 dup + print # Should print 20 (10+10)
+  
+  # Test boolean
+  true false or print  # Should print true
+  
+  # Test math
+  4 square print       # Should print 16
+  3 cube print         # Should print 27
+  -5 abs print         # Should print 5
+  
+  "Standard library tests completed" print
+;
+
+# Run tests if this file is executed directly
+stdlib_test

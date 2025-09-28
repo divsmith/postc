@@ -2,53 +2,126 @@
 # Tokenizes PostC source code into a stream of tokens
 
 # Token types
-:TOKEN_INTEGER 0 param ;
-:TOKEN_FLOAT 0 param ;
-:TOKEN_STRING 0 param ;
-:TOKEN_BOOLEAN 0 param ;
-:TOKEN_IDENTIFIER 0 param ;
-:TOKEN_PLUS 0 param ;
-:TOKEN_MINUS 0 param ;
-:TOKEN_MULTIPLY 0 param ;
-:TOKEN_DIVIDE 0 param ;
-:TOKEN_ASSIGN 0 param ;
-:TOKEN_EQUAL 0 param ;
-:TOKEN_NOT_EQUAL 0 param ;
-:TOKEN_LESS 0 param ;
-:TOKEN_GREATER 0 param ;
-:TOKEN_LESS_EQUAL 0 param ;
-:TOKEN_GREATER_EQUAL 0 param ;
-:TOKEN_DUP 0 param ;
-:TOKEN_DROP 0 param ;
-:TOKEN_SWAP 0 param ;
-:TOKEN_OVER 0 param ;
-:TOKEN_ROT 0 param ;
-:TOKEN_LET 0 param ;
-:TOKEN_VAR 0 param ;
-:TOKEN_IF 0 param ;
-:TOKEN_ELSE 0 param ;
-:TOKEN_WHILE 0 param ;
-:TOKEN_DO 0 param ;
-:TOKEN_FOR 0 param ;
-:TOKEN_FN 0 param ;
-:TOKEN_PARAM 0 param ;
-:TOKEN_RETURN 0 param ;
-:TOKEN_PRINT 0 param ;
-:TOKEN_COLON 0 param ;
-:TOKEN_SEMICOLON 0 param ;
-:TOKEN_LPAREN 0 param ;
-:TOKEN_RPAREN 0 param ;
-:TOKEN_LBRACE 0 param ;
-:TOKEN_RBRACE 0 param ;
-:TOKEN_LBRACKET 0 param ;
-:TOKEN_RBRACKET 0 param ;
-:TOKEN_COMMA 0 param ;
-:TOKEN_COMMENT 0 param ;
-:TOKEN_EOF 0 param ;
-:TOKEN_NEWLINE 0 param ;
+:TOKEN_INTEGER 0 param "INTEGER" ;
+:TOKEN_FLOAT 0 param "FLOAT" ;
+:TOKEN_STRING 0 param "STRING" ;
+:TOKEN_BOOLEAN 0 param "BOOLEAN" ;
+:TOKEN_IDENTIFIER 0 param "IDENTIFIER" ;
+:TOKEN_PLUS 0 param "PLUS" ;
+:TOKEN_MINUS 0 param "MINUS" ;
+:TOKEN_MULTIPLY 0 param "MULTIPLY" ;
+:TOKEN_DIVIDE 0 param "DIVIDE" ;
+:TOKEN_ASSIGN 0 param "ASSIGN" ;
+:TOKEN_EQUAL 0 param "EQUAL" ;
+:TOKEN_NOT_EQUAL 0 param "NOT_EQUAL" ;
+:TOKEN_LESS 0 param "LESS" ;
+:TOKEN_GREATER 0 param "GREATER" ;
+:TOKEN_LESS_EQUAL 0 param "LESS_EQUAL" ;
+:TOKEN_GREATER_EQUAL 0 param "GREATER_EQUAL" ;
+:TOKEN_DUP 0 param "DUP" ;
+:TOKEN_DROP 0 param "DROP" ;
+:TOKEN_SWAP 0 param "SWAP" ;
+:TOKEN_OVER 0 param "OVER" ;
+:TOKEN_ROT 0 param "ROT" ;
+:TOKEN_LET 0 param "LET" ;
+:TOKEN_VAR 0 param "VAR" ;
+:TOKEN_IF 0 param "IF" ;
+:TOKEN_ELSE 0 param "ELSE" ;
+:TOKEN_WHILE 0 param "WHILE" ;
+:TOKEN_DO 0 param "DO" ;
+:TOKEN_FOR 0 param "FOR" ;
+:TOKEN_FN 0 param "FN" ;
+:TOKEN_PARAM 0 param "PARAM" ;
+:TOKEN_RETURN 0 param "RETURN" ;
+:TOKEN_PRINT 0 param "PRINT" ;
+:TOKEN_COLON 0 param "COLON" ;
+:TOKEN_SEMICOLON 0 param "SEMICOLON" ;
+:TOKEN_LPAREN 0 param "LPAREN" ;
+:TOKEN_RPAREN 0 param "RPAREN" ;
+:TOKEN_LBRACE 0 param "LBRACE" ;
+:TOKEN_RBRACE 0 param "RBRACE" ;
+:TOKEN_LBRACKET 0 param "LBRACKET" ;
+:TOKEN_RBRACKET 0 param "RBRACKET" ;
+:TOKEN_COMMA 0 param "COMMA" ;
+:TOKEN_COMMENT 0 param "COMMENT" ;
+:TOKEN_EOF 0 param "EOF" ;
+:TOKEN_NEWLINE 0 param "NEWLINE" ;
+
+# Lexer state variables
+:current_pos 0 param 0 ;  # Current position in source text
+:current_line 0 param 1 ; # Current line number
+:current_column 0 param 1 ;  # Current column
+:current_char 0 param 0 ; # Current character in source text
+
+# Initialize lexer with source text
+:lexer_init 1 param source_text
+  "Initializing lexer" print
+  # In a full implementation, this would set up the lexer state with the source text
+  # For now, just a placeholder
+;
+
+# Get the next token from the source
+:lexer_next_token 0 param
+  # In a full implementation, this would return the next token from the source
+  # For now, return EOF as a placeholder
+  TOKEN_EOF
+;
+
+# Skip whitespace characters
+:skip_whitespace 0 param
+  # In a full implementation, this would skip whitespace in the source text
+  # For now, just a placeholder
+;
+
+# Read a number token
+:read_number 0 param
+  # In a full implementation, this would read a number from the current position
+  # For now, return INTEGER token as a placeholder
+  TOKEN_INTEGER
+;
+
+# Read a string token
+:read_string 0 param
+  # In a full implementation, this would read a string from the current position
+  # For now, return STRING token as a placeholder
+  TOKEN_STRING
+;
+
+# Read an identifier or keyword
+:read_identifier 0 param
+  # In a full implementation, this would read an identifier from the current position
+  # For now, return IDENTIFIER token as a placeholder
+  TOKEN_IDENTIFIER
+;
+
+# Main lexer function
+:lex 1 param source_file
+  "Starting lexer for file: " print
+  source_file print
+  "..." print
+  
+  # Initialize lexer state
+  source_file lexer_init
+  
+  # Process all tokens until EOF
+  :token_loop 0 param
+    lexer_next_token dup TOKEN_EOF != if
+      "Token: " print
+      dup print
+      drop
+      token_loop  # Continue loop
+    else
+      drop  # Drop EOF token
+    ;
+  ;
+  
+  token_loop
+  
+  "Lexer finished" print
+;
 
 # Test lexer
 :lexer_test 0 param
-  "Testing lexer" print
-  TOKEN_INTEGER print
+  "Testing lexer with hello.pc example" print
+  "examples/hello.pc" lex
 ;
