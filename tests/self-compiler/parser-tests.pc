@@ -1,0 +1,277 @@
+# PostC Self-Compiler - Parser Tests
+# Comprehensive tests for AST generation for various syntax patterns
+
+# Test 1: Simple arithmetic expression
+:test_simple_arithmetic 0 param
+  "Testing simple arithmetic expression..." print
+  "5 3 + print" print
+;
+
+# Test 2: Variable declarations
+:test_variable_declarations 0 param
+  "Testing variable declarations..." print
+  "let x 42" print
+  "var y 24" print
+  "let name \"Hello World\"" print
+  "var flag true" print
+;
+
+# Test 3: Function definitions
+:test_function_definitions 0 param
+  "Testing function definitions..." print
+  ":add 2 param
+    a b + return
+  ;" print
+
+  ":multiply 3 param x y z
+    x y * z * return
+  ;" print
+
+  ":fib 1 param n
+    n 0 == if 0 return ;
+    n 1 == if 1 return ;
+    n 1 - fib n 2 - fib + return
+  ;" print
+;
+
+# Test 4: If expressions
+:test_if_expressions 0 param
+  "Testing if expressions..." print
+  "x 5 > if \"x is greater than 5\" print ;" print
+
+  "x 0 > if
+    \"x is positive\" print
+  else
+    \"x is not positive\" print
+  ;" print
+
+  "x 0 > if y 0 > if \"both positive\" print else \"x positive, y not\" print else \"x not positive\" print ;" print
+;
+
+# Test 5: While loops
+:test_while_loops 0 param
+  "Testing while loops..." print
+  "i 0 =
+  i 10 < if
+    i print
+    i 1 + :i
+    i 10 < if i print ;
+  ;" print
+
+  ":countdown 1 param n
+    n 0 > if
+      n print
+      n 1 - countdown
+    ;
+  ;" print
+;
+
+# Test 6: For loops
+:test_for_loops 0 param
+  "Testing for loops..." print
+  "5 :i i 0 > if i print i 1 - :i i 0 > if i print ; ;" print
+
+  ":print_range 1 param count
+    count :i
+    i 0 >= if
+      i print
+      i 1 - :i
+      i 0 >= if i print ;
+    ;
+  ;" print
+;
+
+# Test 7: Array operations
+:test_array_operations 0 param
+  "Testing array operations..." print
+  "[1, 2, 3, 4, 5] :arr" print
+  "arr 0 array_load print" print
+  "arr 2 array_load print" print
+  "arr 1 99 array_store" print
+  "arr 1 array_load print" print
+  "arr array_length print" print
+;
+
+# Test 8: Dictionary operations
+:test_dictionary_operations 0 param
+  "Testing dictionary operations..." print
+  "{name: \"John\", age: 30, city: \"New York\"} :person" print
+  "person \"name\" dict_load print" print
+  "person \"age\" dict_load print" print
+  "person \"country\" \"USA\" dict_store" print
+  "person \"country\" dict_load print" print
+  "person dict_length print" print
+  "person \"age\" dict_has_key print" print
+  "person \"nonexistent\" dict_has_key print" print
+;
+
+# Test 9: String operations
+:test_string_operations 0 param
+  "Testing string operations..." print
+  "\"Hello\" \" World\" string_concat print" print
+  "\"Hello World\" 6 string_substring print" print
+  "\"Hello World\" \"World\" string_indexof print" print
+  "\"Hello World\" string_length print" print
+  "\"Hello\" string_length \"World\" string_length + print" print
+;
+
+# Test 10: Stack operations
+:test_stack_operations 0 param
+  "Testing stack operations..." print
+  "5 3 2 dup print" print
+  "5 3 swap print" print
+  "5 3 2 drop print" print
+  "5 3 over print" print
+  "1 2 3 4 rot print" print
+;
+
+# Test 11: Complex nested expressions
+:test_complex_nested 0 param
+  "Testing complex nested expressions..." print
+  "x y + z * w / print" print
+  "arr [idx] array_load val + print" print
+  "dict \"key\" dict_load func call print" print
+  "a b + c d * + e / print" print
+;
+
+# Test 12: Function calls
+:test_function_calls 0 param
+  "Testing function calls..." print
+  "add 5 3 call print" print
+  "multiply 2 3 4 call print" print
+  "fib 10 call print" print
+  "print_msg \"Hello from function\" call print" print
+;
+
+# Test 13: Mixed data structures
+:test_mixed_structures 0 param
+  "Testing mixed data structures..." print
+  "{users: [{\"name\": \"Alice\", \"age\": 25}, {\"name\": \"Bob\", \"age\": 30}], count: 2} :data" print
+  "data \"users\" dict_load 0 array_load \"name\" dict_load print" print
+  "data \"users\" dict_load 1 array_load \"age\" dict_load print" print
+;
+
+# Test 14: Boolean logic
+:test_boolean_logic 0 param
+  "Testing boolean logic..." print
+  "x 0 > y 0 > = print" print
+  "a 5 == b 10 != = print" print
+  "flag1 flag2 = print" print
+  "x 0 > y 0 > | z 0 > & print" print
+;
+
+# Test 15: I/O operations
+:test_io_operations 0 param
+  "Testing I/O operations..." print
+  "\"Enter a number: \" print read_stdin :num" print
+  "\"data.txt\" read_file :content" print
+  "num print" print
+  "content print" print
+;
+
+# Test 16: Variable scoping and assignment
+:test_variable_scoping 0 param
+  "Testing variable scoping..." print
+  "let x 10" print
+  "x 5 = print" print
+  "var y 20" print
+  "y 25 = print" print
+  ":test_scope 0 param
+    let local_var 42
+    local_var print
+  ;" print
+  "test_scope call" print
+;
+
+# Test 17: Recursive functions
+:test_recursive_functions 0 param
+  "Testing recursive functions..." print
+  ":factorial 1 param n
+    n 0 == if 1 return ;
+    n 1 == if 1 return ;
+    n n 1 - factorial * return
+  ;" print
+
+  ":power 2 param base exp
+    exp 0 == if 1 return ;
+    exp 1 == if base return ;
+    base exp 1 - power * return
+  ;" print
+
+  "5 factorial call print" print
+  "2 8 power call print" print
+;
+
+# Test 18: Array and dict literals in expressions
+:test_literals_in_expressions 0 param
+  "Testing literals in expressions..." print
+  "[1, 2, 3] 0 array_load 2 * print" print
+  "{a: 1, b: 2} \"a\" dict_load \"b\" dict_load + print" print
+  "[[1, 2], [3, 4]] 1 array_load 0 array_load print" print
+;
+
+# Test 19: Complex control flow
+:test_complex_control_flow 0 param
+  "Testing complex control flow..." print
+  ":find_max 2 param a b
+    a b > if a return else b return ;
+  ;" print
+
+  ":process_array 1 param arr
+    0 :i
+    0 :max
+    arr array_length :len
+    i len < if
+      arr i array_load :current
+      current max > if current :max ;
+      i 1 + :i
+      i len < if arr i array_load current max > if current :max ;;
+    ;
+    max print
+  ;" print
+
+  "find_max 10 20 call print" print
+  "find_max 30 15 call print" print
+;
+
+# Test 20: Error conditions
+:test_error_conditions 0 param
+  "Testing error conditions..." print
+  "Missing semicolon" print
+  ":incomplete_function 1 param x" print
+  "Unclosed string literal" print
+  "Invalid number format" print
+;
+
+# Run all parser tests
+:test_all_parser 0 param
+  "=== Running PostC Parser Tests ===" print
+  "" print
+
+  test_simple_arithmetic
+  test_variable_declarations
+  test_function_definitions
+  test_if_expressions
+  test_while_loops
+  test_for_loops
+  test_array_operations
+  test_dictionary_operations
+  test_string_operations
+  test_stack_operations
+  test_complex_nested
+  test_function_calls
+  test_mixed_structures
+  test_boolean_logic
+  test_io_operations
+  test_variable_scoping
+  test_recursive_functions
+  test_literals_in_expressions
+  test_complex_control_flow
+  test_error_conditions
+
+  "" print
+  "=== All Parser Tests Completed ===" print
+;
+
+# Run the tests
+test_all_parser

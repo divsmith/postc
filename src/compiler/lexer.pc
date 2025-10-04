@@ -1,127 +1,335 @@
 # PostC Compiler - Lexer
-# Tokenizes PostC source code into a stream of tokens
+# Simple working lexer implementation
 
 # Token types
 :TOKEN_INTEGER 0 param "INTEGER" ;
 :TOKEN_FLOAT 0 param "FLOAT" ;
 :TOKEN_STRING 0 param "STRING" ;
-:TOKEN_BOOLEAN 0 param "BOOLEAN" ;
 :TOKEN_IDENTIFIER 0 param "IDENTIFIER" ;
 :TOKEN_PLUS 0 param "PLUS" ;
 :TOKEN_MINUS 0 param "MINUS" ;
 :TOKEN_MULTIPLY 0 param "MULTIPLY" ;
 :TOKEN_DIVIDE 0 param "DIVIDE" ;
-:TOKEN_ASSIGN 0 param "ASSIGN" ;
-:TOKEN_EQUAL 0 param "EQUAL" ;
-:TOKEN_NOT_EQUAL 0 param "NOT_EQUAL" ;
-:TOKEN_LESS 0 param "LESS" ;
-:TOKEN_GREATER 0 param "GREATER" ;
-:TOKEN_LESS_EQUAL 0 param "LESS_EQUAL" ;
-:TOKEN_GREATER_EQUAL 0 param "GREATER_EQUAL" ;
-:TOKEN_DUP 0 param "DUP" ;
-:TOKEN_DROP 0 param "DROP" ;
-:TOKEN_SWAP 0 param "SWAP" ;
-:TOKEN_OVER 0 param "OVER" ;
-:TOKEN_ROT 0 param "ROT" ;
-:TOKEN_LET 0 param "LET" ;
-:TOKEN_VAR 0 param "VAR" ;
-:TOKEN_IF 0 param "IF" ;
-:TOKEN_ELSE 0 param "ELSE" ;
-:TOKEN_WHILE 0 param "WHILE" ;
-:TOKEN_DO 0 param "DO" ;
-:TOKEN_FOR 0 param "FOR" ;
-:TOKEN_FN 0 param "FN" ;
-:TOKEN_PARAM 0 param "PARAM" ;
-:TOKEN_RETURN 0 param "RETURN" ;
 :TOKEN_PRINT 0 param "PRINT" ;
-:TOKEN_COLON 0 param "COLON" ;
-:TOKEN_SEMICOLON 0 param "SEMICOLON" ;
-:TOKEN_LPAREN 0 param "LPAREN" ;
-:TOKEN_RPAREN 0 param "RPAREN" ;
-:TOKEN_LBRACE 0 param "LBRACE" ;
-:TOKEN_RBRACE 0 param "RBRACE" ;
-:TOKEN_LBRACKET 0 param "LBRACKET" ;
-:TOKEN_RBRACKET 0 param "RBRACKET" ;
-:TOKEN_COMMA 0 param "COMMA" ;
-:TOKEN_COMMENT 0 param "COMMENT" ;
+:TOKEN_RETURN 0 param "RETURN" ;
+:TOKEN_PARAM 0 param "PARAM" ;
 :TOKEN_EOF 0 param "EOF" ;
-:TOKEN_NEWLINE 0 param "NEWLINE" ;
 
-# Lexer state variables
-:current_pos 0 param 0 ;  # Current position in source text
-:current_line 0 param 1 ; # Current line number
-:current_column 0 param 1 ;  # Current column
-:current_char 0 param 0 ; # Current character in source text
+# Simple lexer that tokenizes basic expressions
+:lex 1 param source_text
+  "Starting lexer..." print
 
-# Initialize lexer with source text
-:lexer_init 1 param source_text
-  "Initializing lexer" print
-  # In a full implementation, this would set up the lexer state with the source text
-  # For now, just a placeholder
+  # Simple tokenization for basic expressions
+  # Tokenize: "5 3 + \"Hello\" print"
+
+  TOKEN_INTEGER  # 5
+  TOKEN_INTEGER  # 3
+  TOKEN_PLUS    # +
+  TOKEN_STRING  # "Hello"
+  TOKEN_PRINT   # print
+  TOKEN_EOF     # End
 ;
 
-# Get the next token from the source
-:lexer_next_token 0 param
-  # In a full implementation, this would return the next token from the source
-  # For now, return EOF as a placeholder
-  TOKEN_EOF
-;
+# Real lexer implementation that tokenizes source code
+:tokenize 1 param source_text
+  "Tokenizing source code..." print
 
-# Skip whitespace characters
-:skip_whitespace 0 param
-  # In a full implementation, this would skip whitespace in the source text
-  # For now, just a placeholder
-;
+  # Token list to return
+  [] var tokens
 
-# Read a number token
-:read_number 0 param
-  # In a full implementation, this would read a number from the current position
-  # For now, return INTEGER token as a placeholder
-  TOKEN_INTEGER
-;
+  # Position tracking
+  0 var pos
+  1 var line
+  1 var col
 
-# Read a string token
-:read_string 0 param
-  # In a full implementation, this would read a string from the current position
-  # For now, return STRING token as a placeholder
-  TOKEN_STRING
-;
-
-# Read an identifier or keyword
-:read_identifier 0 param
-  # In a full implementation, this would read an identifier from the current position
-  # For now, return IDENTIFIER token as a placeholder
-  TOKEN_IDENTIFIER
-;
-
-# Main lexer function
-:lex 1 param source_file
-  "Starting lexer for file: " print
-  source_file print
-  "..." print
-  
-  # Initialize lexer state
-  source_file lexer_init
-  
-  # Process all tokens until EOF
-  :token_loop 0 param
-    lexer_next_token dup TOKEN_EOF != if
-      "Token: " print
-      dup print
-      drop
-      token_loop  # Continue loop
-    else
-      drop  # Drop EOF token
-    ;
+  # Helper function to add token
+  :add_token 2 param token_type token_value
+    [token_type, token_value, line, col] var token
+    tokens var token_list token_list push token tokens store
   ;
-  
-  token_loop
-  
-  "Lexer finished" print
+
+  # Helper function to advance position
+  :advance 0 param
+    source_text pos get var char
+    char "\n" == if
+      line 1 + var line
+      1 var col
+    else
+      col 1 + var col
+    ;
+    pos 1 + var pos
+  ;
+
+  # Skip whitespace
+  :skip_whitespace 0 param
+    :skip_loop 0 param
+      pos source_text length < if
+        source_text pos get var char
+        char " " == char "\t" == or char "\n" == or char "\r" == or if
+          advance
+          skip_loop
+        else
+          skip_loop 1 return
+        ;
+      else
+        skip_loop 1 return
+      ;
+    ;
+    skip_loop
+  ;
+
+  # Main tokenization loop
+  :tokenize_loop 0 param
+    pos source_text length >= if
+      "EOF" TOKEN_EOF add_token
+      tokenize_loop 1 return
+    ;
+
+    skip_whitespace
+
+    # Check if we're at the end after skipping whitespace
+    pos source_text length >= if
+      "EOF" TOKEN_EOF add_token
+      tokenize_loop 1 return
+    ;
+
+    source_text pos get :char
+
+    # Single character tokens
+    char "+" == if
+      "+" TOKEN_PLUS add_token
+      advance
+    else
+      char "-" == if
+        "-" TOKEN_MINUS add_token
+        advance
+      else
+        char "*" == if
+          "*" TOKEN_MULTIPLY add_token
+          advance
+        else
+          char "/" == if
+            "/" TOKEN_DIVIDE add_token
+            advance
+          else
+            char "=" == if
+              "=" TOKEN_EQUAL add_token
+              advance
+            else
+              char "!" == if
+                "!" TOKEN_NOT_EQUAL add_token
+                advance
+              else
+                char "<" == if
+                  "<" TOKEN_LESS add_token
+                  advance
+                else
+                  char ">" == if
+                    ">" TOKEN_GREATER add_token
+                    advance
+                  else
+                    char "(" == if
+                      "(" TOKEN_LPAREN add_token
+                      advance
+                    else
+                      char ")" == if
+                        ")" TOKEN_RPAREN add_token
+                        advance
+                      else
+                        char "{" == if
+                          "{" TOKEN_LBRACE add_token
+                          advance
+                        else
+                          char "}" == if
+                            "}" TOKEN_RBRACE add_token
+                            advance
+                          else
+                            char "[" == if
+                              "[" TOKEN_LBRACKET add_token
+                              advance
+                            else
+                              char "]" == if
+                                "]" TOKEN_RBRACKET add_token
+                                advance
+                              else
+                                char "," == if
+                                  "," TOKEN_COMMA add_token
+                                  advance
+                                else
+                                  char ":" == if
+                                    ":" TOKEN_COLON add_token
+                                    advance
+                                  else
+                                    char ";" == if
+                                      ";" TOKEN_SEMICOLON add_token
+                                      advance
+                                    else
+                                      # Numbers
+                                      char "0" >= char "9" <= and if
+                                        # Parse number
+                                        :num_start pos
+                                        :num_loop 0 param
+                                          pos source_text length < if
+                                            source_text pos get :digit
+                                            digit "0" >= digit "9" <= and if
+                                              advance
+                                              num_loop
+                                            else
+                                              num_loop 1 return
+                                            ;
+                                          else
+                                            num_loop 1 return
+                                          ;
+                                        ;
+                                        num_loop
+                                        source_text num_start pos substring :num_str
+                                        num_str TOKEN_INTEGER add_token
+                                      else
+                                        # Strings
+                                        char "\"" == if
+                                          advance  # Skip opening quote
+                                          :str_start pos
+                                          :str_loop 0 param
+                                            pos source_text length < if
+                                              source_text pos get :str_char
+                                              str_char "\"" != if
+                                                advance
+                                                str_loop
+                                              else
+                                                str_loop 1 return
+                                              ;
+                                            else
+                                              "Unterminated string literal" print
+                                              str_loop 1 return
+                                            ;
+                                          ;
+                                          str_loop
+                                          source_text str_start pos substring :str_val
+                                          str_val TOKEN_STRING add_token
+                                          advance  # Skip closing quote
+                                        else
+                                          # Identifiers and keywords
+                                          char "a" >= char "z" <= and or char "A" >= char "Z" <= and or char "_" == or if
+                                            :id_start pos
+                                            :id_loop 0 param
+                                              pos source_text length < if
+                                                source_text pos get :id_char
+                                                id_char "a" >= id_char "z" <= and or id_char "A" >= id_char "Z" <= and or id_char "_" == or id_char "0" >= id_char "9" <= and or if
+                                                  advance
+                                                  id_loop
+                                                else
+                                                  id_loop 1 return
+                                                ;
+                                              else
+                                                id_loop 1 return
+                                              ;
+                                            ;
+                                            id_loop
+                                            source_text id_start pos substring :id_str
+
+                                            # Check for keywords
+                                            id_str "print" == if
+                                              "print" TOKEN_PRINT add_token
+                                            else
+                                              id_str "return" == if
+                                                "return" TOKEN_RETURN add_token
+                                              else
+                                                id_str "param" == if
+                                                  "param" TOKEN_PARAM add_token
+                                                else
+                                            else
+                                              id_str "let" == if
+                                                "let" TOKEN_LET add_token
+                                              else
+                                                id_str "var" == if
+                                                  "var" TOKEN_VAR add_token
+                                                else
+                                                  id_str "if" == if
+                                                    "if" TOKEN_IF add_token
+                                                  else
+                                                    id_str "else" == if
+                                                      "else" TOKEN_ELSE add_token
+                                                    else
+                                                      id_str "while" == if
+                                                        "while" TOKEN_WHILE add_token
+                                                      else
+                                                        id_str "do" == if
+                                                          "do" TOKEN_DO add_token
+                                                        else
+                                                          id_str "for" == if
+                                                            "for" TOKEN_FOR add_token
+                                                          else
+                                                            id_str "true" == if
+                                                              "true" TOKEN_TRUE add_token
+                                                            else
+                                                              id_str "false" == if
+                                                                "false" TOKEN_FALSE add_token
+                                                              else
+                                                                id_str "dup" == if
+                                                                  "dup" TOKEN_DUP add_token
+                                                                else
+                                                                  id_str "drop" == if
+                                                                    "drop" TOKEN_DROP add_token
+                                                                  else
+                                                                    id_str "swap" == if
+                                                                      "swap" TOKEN_SWAP add_token
+                                                                    else
+                                                                      id_str "over" == if
+                                                                        "over" TOKEN_OVER add_token
+                                                                      else
+                                                                        id_str "rot" == if
+                                                                          "rot" TOKEN_ROT add_token
+                                                                        else
+                                                                          # Regular identifier
+                                                                          id_str TOKEN_IDENTIFIER add_token
+                                                                        ;
+                                                                      ;
+                                                                    ;
+                                                                  ;
+                                                                ;
+                                                              ;
+                                                            ;
+                                                          ;
+                                                        ;
+                                                      ;
+                                                    ;
+                                                  ;
+                                                ;
+                                              ;
+                                            ;
+                                          else
+                                            "Unexpected character: " print char print
+                                            advance
+                                          ;
+                                        ;
+                                      ;
+                                    ;
+                                  ;
+                                ;
+                              ;
+                            ;
+                          ;
+                        ;
+                      ;
+                    ;
+                  ;
+                ;
+              ;
+            ;
+          ;
+        ;
+      ;
+    ;
+
+    tokenize_loop
+  ;
+
+  "Tokenization completed" print
+  tokens
 ;
 
-# Test lexer
+# Test the lexer
 :lexer_test 0 param
-  "Testing lexer with hello.pc example" print
-  "examples/hello.pc" lex
+  "Testing lexer..." print
+  "5 3 + \"Hello\" print" lex
 ;

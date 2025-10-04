@@ -667,7 +667,28 @@ class Opcode(Enum):
     
     # I/O
     PRINT = "PRINT"
-    
+    READ_STDIN = "READ_STDIN"
+    READ_FILE = "READ_FILE"
+
+    # Arrays
+    CREATE_ARRAY = "CREATE_ARRAY"
+    LOAD_ARRAY = "LOAD_ARRAY"
+    STORE_ARRAY = "STORE_ARRAY"
+    ARRAY_LENGTH = "ARRAY_LENGTH"
+
+    # Dictionaries
+    CREATE_DICT = "CREATE_DICT"
+    LOAD_DICT = "LOAD_DICT"
+    STORE_DICT = "STORE_DICT"
+    DICT_HAS_KEY = "DICT_HAS_KEY"
+    DICT_LENGTH = "DICT_LENGTH"
+
+    # String operations
+    STRING_LENGTH = "STRING_LENGTH"
+    STRING_CONCAT = "STRING_CONCAT"
+    STRING_SUBSTRING = "STRING_SUBSTRING"
+    STRING_INDEXOF = "STRING_INDEXOF"
+
     # Halt
     HALT = "HALT"
 
@@ -851,9 +872,6 @@ class CodeGenerator:
 
         # jump to start
         self.emit(Instruction(Opcode.JUMP, loop_start, node.line))
-
-        # patch jump
-        jump_to_end.operand = len(self.current_function.instructions)
         
     def generate_for_loop(self, node: ASTNode):
         """Generate code for a for loop."""
@@ -985,6 +1003,36 @@ class CodeGenerator:
                     opcode = op_map.get(token.value)
                     if opcode:
                         self.emit(Instruction(opcode, line=line))
+                elif token.value == 'read_stdin':
+                    self.emit(Instruction(Opcode.READ_STDIN, line=line))
+                elif token.value == 'read_file':
+                    self.emit(Instruction(Opcode.READ_FILE, line=line))
+                elif token.value == 'create_array':
+                    self.emit(Instruction(Opcode.CREATE_ARRAY, line=line))
+                elif token.value == 'load_array':
+                    self.emit(Instruction(Opcode.LOAD_ARRAY, line=line))
+                elif token.value == 'store_array':
+                    self.emit(Instruction(Opcode.STORE_ARRAY, line=line))
+                elif token.value == 'array_length':
+                    self.emit(Instruction(Opcode.ARRAY_LENGTH, line=line))
+                elif token.value == 'create_dict':
+                    self.emit(Instruction(Opcode.CREATE_DICT, line=line))
+                elif token.value == 'load_dict':
+                    self.emit(Instruction(Opcode.LOAD_DICT, line=line))
+                elif token.value == 'store_dict':
+                    self.emit(Instruction(Opcode.STORE_DICT, line=line))
+                elif token.value == 'dict_has_key':
+                    self.emit(Instruction(Opcode.DICT_HAS_KEY, line=line))
+                elif token.value == 'dict_length':
+                    self.emit(Instruction(Opcode.DICT_LENGTH, line=line))
+                elif token.value == 'string_length':
+                    self.emit(Instruction(Opcode.STRING_LENGTH, line=line))
+                elif token.value == 'string_concat':
+                    self.emit(Instruction(Opcode.STRING_CONCAT, line=line))
+                elif token.value == 'string_substring':
+                    self.emit(Instruction(Opcode.STRING_SUBSTRING, line=line))
+                elif token.value == 'string_indexof':
+                    self.emit(Instruction(Opcode.STRING_INDEXOF, line=line))
                 else:
                     # Check if it's a function call
                     if token.value in self.functions:

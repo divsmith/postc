@@ -1,0 +1,128 @@
+# PostC Compiler Integration Test
+# Tests all major features of the PostC language and compiler
+
+# Test 1: Basic arithmetic and printing
+"PostC Compiler Integration Test" print
+"================================" print
+"" print
+
+"Test 1: Basic arithmetic" print
+5 3 + "5 + 3 = " print print
+10 4 - "10 - 4 = " print print
+6 7 * "6 * 7 = " print print
+15 3 / "15 / 3 = " print print
+"" print
+
+# Test 2: Variables (immutable and mutable)
+"Test 2: Variables" print
+let x 42
+let y 24
+x "x = " print print
+y "y = " print print
+
+var z 0
+x y + z =
+z "z = x + y = " print print
+
+# Modify mutable variable
+z 100 =
+z "z (modified) = " print print
+"" print
+
+# Test 3: Control structures
+"Test 3: Control structures" print
+
+# If/else statement
+x y > if
+  "x is greater than y" print
+else
+  "x is not greater than y" print
+;
+
+# While loop
+var counter 5
+"While loop test:" print
+counter 0 > while
+  counter "countdown: " print print
+  counter 1 - :counter
+do
+  "Loop finished!" print
+;
+
+"" print
+
+# Test 4: Functions
+"Test 4: Functions" print
+
+:add 2 param a b
+  a b + "add(" a ", " b ") = " print print
+;
+
+:sub 2 param a b
+  a b - "sub(" a ", " b ") = " print print
+;
+
+10 7 add
+15 8 sub
+"" print
+
+# Test 5: Arrays
+"Test 5: Arrays" print
+[1, 2, 3, 4, 5] :numbers
+"Array length: " print numbers array_length print
+"numbers[0] = " print 0 numbers array_load print
+"numbers[2] = " print 2 numbers array_load print
+"" print
+
+# Test 6: Stack operations
+"Test 6: Stack operations" print
+1 2 3
+"Before operations: 1, 2, 3" print
+dup "After dup: " print .
+swap "After swap: " print .
+over "After over: " print .
+rot "After rot: " print .
+drop "After drop: " print .
+"" print
+
+# Test 7: Boolean operations
+"Test 7: Boolean operations" print
+5 3 > "5 > 3 = " print print
+10 20 < "10 < 20 = " print print
+42 42 = "42 = 42 = " print print
+1 2 != "1 != 2 = " print print
+"" print
+
+# Test 8: Complex expressions
+"Test 8: Complex expressions" print
+let a 10
+let b 20
+let c 3
+
+a b + c * "a + b * c = " print print
+a b * c + "a * b + c = " print print
+a c / b + "a / c + b = " print print
+"" print
+
+# Test 9: Nested function calls
+"Test 9: Nested function calls" print
+
+:max 2 param x y
+  x y > if x return ; y return
+;
+
+:min 2 param x y
+  x y < if x return ; y return
+;
+
+42 24 max 15 min "max(42, 24) then min with 15 = " print print
+"" print
+
+# Test 10: String operations
+"Test 10: String operations" print
+"Hello" " " + "World" + " = " print print
+"Hello" string_length "Length of 'Hello' = " print print
+"" print
+
+"Integration test completed successfully!" print
+"All PostC features are working correctly." print

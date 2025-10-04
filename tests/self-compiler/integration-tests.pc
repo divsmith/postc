@@ -1,0 +1,375 @@
+# PostC Self-Compiler - Integration Tests
+# Comprehensive tests for complete compilation pipeline
+
+# Test 1: Simple calculator program
+:test_calculator_integration 0 param
+  "Testing calculator program integration..." print
+
+  ":add 2 param a b a b + return ;" print
+  ":subtract 2 param a b a b - return ;" print
+  ":multiply 2 param a b a b * return ;" print
+  ":divide 2 param a b a b / return ;" print
+
+  ":calculator 0 param" print
+    "\"Simple Calculator\" print" print
+    "\"Enter first number: \" print" print
+    "read_stdin :a" print
+    "\"Enter second number: \" print" print
+    "read_stdin :b" print
+    "\"Enter operation (+, -, *, /): \" print" print
+    "read_stdin :op" print
+
+    "op \"+\" == if a b add \"Result: \" print print return ;" print
+    "op \"-\" == if a b subtract \"Result: \" print print return ;" print
+    "op \"*\" == if a b multiply \"Result: \" print print return ;" print
+    "op \"/\" == if a b divide \"Result: \" print print return ;" print
+    "\"Invalid operation\" print" print
+  ";" print
+
+  "calculator call" print
+;
+
+# Test 2: Fibonacci sequence generator
+:test_fibonacci_integration 0 param
+  "Testing fibonacci program integration..." print
+
+  ":fib 1 param n" print
+    "n 0 == if 0 return ;" print
+    "n 1 == if 1 return ;" print
+    "n 1 - fib n 2 - fib + return" print
+  ";" print
+
+  ":main 0 param" print
+    "\"Fibonacci Sequence Generator\" print" print
+    "\"How many Fibonacci numbers? \" print" print
+    "read_stdin :count" print
+    "0 :i" print
+    "i count < if" print
+      "i fib :fib_num" print
+      "i \": \" print fib_num print" print
+      "i 1 + :i" print
+      "i count < if i fib fib_num i \": \" print fib_num print ;" print
+    ";" print
+    "\"Fibonacci sequence completed\" print" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 3: Array processing program
+:test_array_processing_integration 0 param
+  "Testing array processing program integration..." print
+
+  ":sum_array 1 param arr" print
+    "0 :sum" print
+    "0 :i" print
+    "arr array_length :len" print
+    "i len < if" print
+      "arr i array_load :val" print
+      "sum val + :sum" print
+      "i 1 + :i" print
+      "i len < if arr i array_load val sum val + :sum ;" print
+    ";" print
+    "sum return" print
+  ";" print
+
+  ":find_max 1 param arr" print
+    "arr 0 array_load :max" print
+    "1 :i" print
+    "arr array_length :len" print
+    "i len < if" print
+      "arr i array_load :val" print
+      "val max > if val :max ;" print
+      "i 1 + :i" print
+      "i len < if arr i array_load val val max > if val :max ;" print
+    ";" print
+    "max return" print
+  ";" print
+
+  ":main 0 param" print
+    "[15, 23, 8, 42, 16, 7] :numbers" print
+    "numbers sum_array :total" print
+    "numbers find_max :maximum" print
+    "\"Array sum: \" print total print" print
+    "\"Array max: \" print maximum print" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 4: Dictionary-based contact manager
+:test_contact_manager_integration 0 param
+  "Testing contact manager program integration..." print
+
+  ":add_contact 3 param contacts name email phone" print
+    "{name: name, email: email, phone: phone} :contact" print
+    "contacts name contact dict_store" print
+    "\"Contact added successfully\" print" print
+  ";" print
+
+  ":get_contact 2 param contacts name" print
+    "contacts name dict_has_key if" print
+      "contacts name dict_load :contact" print
+      "contact \"name\" dict_load \" - \" print" print
+      "contact \"email\" dict_load print" print
+      "contact \"phone\" dict_load print" print
+    else" print
+      "\"Contact not found\" print" print
+    ";" print
+  ";" print
+
+  ":list_contacts 1 param contacts" print
+    "\"Contact List:\" print" print
+    "contacts dict_length 0 > if" print
+      "\"No contacts found\" print" print
+    ";" print
+  ";" print
+
+  ":main 0 param" print
+    "{} :contacts" print
+
+    "\"Contact Manager\" print" print
+    "contacts \"Alice\" \"alice@email.com\" \"123-456-7890\" add_contact call" print
+    "contacts \"Bob\" \"bob@email.com\" \"098-765-4321\" add_contact call" print
+    "contacts \"Charlie\" \"charlie@email.com\" \"555-555-5555\" add_contact call" print
+
+    "\"Alice\" contacts get_contact call" print
+    "\"David\" contacts get_contact call" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 5: String processing utilities
+:test_string_processing_integration 0 param
+  "Testing string processing program integration..." print
+
+  ":reverse_string 1 param str" print
+    "\"\" :reversed" print
+    "str string_length 1 - :i" print
+    "i 0 >= if" print
+      "str i string_substring 1 :char" print
+      "char reversed string_concat :reversed" print
+      "i 1 - :i" print
+      "i 0 >= if str i string_substring 1 char char reversed string_concat :reversed ;" print
+    ";" print
+    "reversed return" print
+  ";" print
+
+  ":count_words 1 param str" print
+    "0 :count" print
+    "0 :i" print
+    "str string_length :len" print
+    "i len < if" print
+      "str i string_substring 1 :char" print
+      "char \" \" == if count 1 + :count ;" print
+      "i 1 + :i" print
+      "i len < if str i string_substring 1 char char \" \" == if count 1 + :count ;" print
+    ";" print
+    "count 1 + return" print
+  ";" print
+
+  ":main 0 param" print
+    "\"Hello World Program\" :test_str" print
+    "test_str reverse_string :reversed" print
+    "test_str count_words :word_count" print
+    "\"Original: \" print test_str print" print
+    "\"Reversed: \" print reversed print" print
+    "\"Word count: \" print word_count print" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 6: File I/O operations
+:test_file_io_integration 0 param
+  "Testing file I/O program integration..." print
+
+  ":write_numbers 1 param filename" print
+    "\"Writing numbers to file...\" print" print
+    "filename \"data.txt\" == if" print
+      "\"1\n2\n3\n4\n5\" :content" print
+      "\"File written\" print" print
+    ";" print
+  ";" print
+
+  ":read_and_process 1 param filename" print
+    "filename read_file :content" print
+    "\"File content: \" print content print" print
+    "content string_length :len" print
+    "\"File length: \" print len print" print
+  ";" print
+
+  ":main 0 param" print
+    "\"data.txt\" write_numbers call" print
+    "\"data.txt\" read_and_process call" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 7: Stack-based algorithms
+:test_stack_algorithms_integration 0 param
+  "Testing stack-based algorithm integration..." print
+
+  ":is_palindrome 1 param str" print
+    "\"\" :reversed" print
+    "str string_length 1 - :i" print
+    "i 0 >= if" print
+      "str i string_substring 1 :char" print
+      "char reversed string_concat :reversed" print
+      "i 1 - :i" print
+      "i 0 >= if str i string_substring 1 char char reversed string_concat :reversed ;" print
+    ";" print
+    "str reversed == return" print
+  ";" print
+
+  ":evaluate_postfix 1 param expr" print
+    "[] :stack" print
+    "\" \" expr split :tokens" print
+    "0 :i" print
+    "i tokens length < if" print
+      "tokens i get :token" print
+      "token \"+\" == if" print
+        "stack pop :b" print
+        "stack pop :a" print
+        "a b + stack push" print
+      else token \"*\" == if" print
+        "stack pop :b" print
+        "stack pop :a" print
+        "a b * stack push" print
+      else" print
+        "token stack push" print
+      ";" print
+      "i 1 + :i" print
+      "i tokens length < if tokens i get token token \"+\" == if stack pop b stack pop a a b + stack push else token \"*\" == if stack pop b stack pop a a b * stack push else token stack push ; ;" print
+    ";" print
+    "stack pop return" print
+  ";" print
+
+  ":main 0 param" print
+    "\"radar\" is_palindrome call \"radar is palindrome: \" print print" print
+    "\"hello\" is_palindrome call \"hello is palindrome: \" print print" print
+    "\"2 3 + 4 *\" evaluate_postfix :result" print
+    "\"Postfix result: \" print result print" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 8: Complex data structure manipulation
+:test_complex_data_integration 0 param
+  "Testing complex data structure integration..." print
+
+  ":process_student_data 1 param students" print
+    "0 :total_age" print
+    "0 :count" print
+    "students dict_length :len" print
+    "len 0 > if" print
+      "0 :i" print
+      "i len < if" print
+        "students \"student_\" i + dict_load :student" print
+        "student \"age\" dict_load :age" print
+        "total_age age + :total_age" print
+        "count 1 + :count" print
+        "i 1 + :i" print
+        "i len < if students \"student_\" i + dict_load student student \"age\" dict_load age total_age age + :total_age count 1 + :count ;" print
+      ";" print
+    ";" print
+    "count 0 > if total_age count / :average" print
+    "\"Average age: \" print average print" print
+  ";" print
+
+  ":main 0 param" print
+    "{student_0: {name: \"Alice\", age: 20}, student_1: {name: \"Bob\", age: 22}, student_2: {name: \"Charlie\", age: 21}} :class_data" print
+    "class_data process_student_data call" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 9: Mathematical computations
+:test_mathematical_integration 0 param
+  "Testing mathematical computation integration..." print
+
+  ":power 2 param base exp" print
+    "1 :result" print
+    "exp 0 > if" print
+      "result base * :result" print
+      "exp 1 - :exp" print
+      "exp 0 > if result base * :result ;" print
+    ";" print
+    "result return" print
+  ";" print
+
+  ":gcd 2 param a b" print
+    "b 0 == if a return ;" print
+    "a b % gcd return" print
+  ";" print
+
+  ":main 0 param" print
+    "2 8 power :pow_result" print
+    "15 25 gcd :gcd_result" print
+    "\"2^8 = \" print pow_result print" print
+    "\"gcd(15, 25) = \" print gcd_result print" print
+  ";" print
+
+  "main call" print
+;
+
+# Test 10: Error handling and validation
+:test_error_handling_integration 0 param
+  "Testing error handling integration..." print
+
+  ":safe_divide 2 param a b" print
+    "b 0 == if" print
+      "\"Error: Division by zero\" print" print
+      "0 return" print
+    ";" print
+    "a b / return" print
+  ";" print
+
+  ":validate_input 1 param input" print
+    "input \"\" == if" print
+      "\"Error: Empty input\" print" print
+      "0 return" print
+    ";" print
+    "input \"quit\" == if" print
+      "\"Goodbye!\" print" print
+      "1 return" print
+    ";" print
+    "input return" print
+  ";" print
+
+  ":main 0 param" print
+    "10 0 safe_divide call" print
+    "\"\" validate_input call" print
+    "\"hello\" validate_input call" print
+    "\"quit\" validate_input call" print
+  ";" print
+
+  "main call" print
+;
+
+# Run all integration tests
+:test_all_integration 0 param
+  "=== Running PostC Integration Tests ===" print
+  "" print
+
+  test_calculator_integration
+  test_fibonacci_integration
+  test_array_processing_integration
+  test_contact_manager_integration
+  test_string_processing_integration
+  test_file_io_integration
+  test_stack_algorithms_integration
+  test_complex_data_integration
+  test_mathematical_integration
+  test_error_handling_integration
+
+  "" print
+  "=== All Integration Tests Completed ===" print
+;
+
+# Run the tests
+test_all_integration

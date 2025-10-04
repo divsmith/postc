@@ -1,0 +1,167 @@
+{
+  "constants": [
+    42,
+    10,
+    "immutable",
+    "mutable",
+    5,
+    "x",
+    0,
+    "positive",
+    "non-positive",
+    1,
+    "fact",
+    3,
+    100,
+    200,
+    300,
+    2,
+    "name",
+    "PostC",
+    "version",
+    "1.0",
+    "README.md",
+    "=== Variables Test ===",
+    "test_vars",
+    "=== Control Flow Test ===",
+    "test_if",
+    "=== Recursion Test (Factorial of 4) ===",
+    4,
+    "=== Array Test ===",
+    "test_array",
+    "=== Dictionary Test ===",
+    "test_dict",
+    "=== I/O Test ===",
+    "test_file",
+    "All tests completed!"
+  ],
+  "functions": {
+    "test_vars": {
+      "name": "test_vars",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_CONST 0",
+        "LOAD_CONST 1",
+        "STORE_VAR 2",
+        "LOAD_VAR 2",
+        "PRINT",
+        "LOAD_VAR 3",
+        "PRINT",
+        "LOAD_VAR 3",
+        "LOAD_CONST 4",
+        "ADD",
+        "STORE_VAR 3",
+        "LOAD_VAR 3",
+        "PRINT",
+        "STORE_VAR 3",
+        "RETURN"
+      ]
+    },
+    "test_if": {
+      "name": "test_if",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_CONST 4",
+        "LOAD_VAR 5",
+        "LOAD_CONST 6",
+        "GT",
+        "STORE_VAR 5",
+        "LOAD_STRING 7",
+        "PRINT",
+        "JUMP_IF_FALSE 9",
+        "JUMP 11",
+        "LOAD_STRING 8",
+        "PRINT",
+        "RETURN"
+      ]
+    },
+    "fact": {
+      "name": "fact",
+      "param_count": 1,
+      "instructions": [
+        "DUP",
+        "LOAD_CONST 9",
+        "LE",
+        "DROP",
+        "LOAD_CONST 9",
+        "JUMP_IF_FALSE 7",
+        "JUMP 12",
+        "DUP",
+        "LOAD_CONST 9",
+        "SUB",
+        "CALL 10",
+        "MUL",
+        "RETURN"
+      ]
+    },
+    "test_array": {
+      "name": "test_array",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_CONST 11",
+        "CREATE_ARRAY",
+        "LOAD_CONST 12",
+        "LOAD_CONST 6",
+        "STORE_ARRAY",
+        "LOAD_CONST 13",
+        "LOAD_CONST 9",
+        "STORE_ARRAY",
+        "LOAD_CONST 14",
+        "LOAD_CONST 15",
+        "STORE_ARRAY",
+        "LOAD_CONST 6",
+        "LOAD_ARRAY",
+        "PRINT",
+        "LOAD_CONST 9",
+        "LOAD_ARRAY",
+        "PRINT",
+        "LOAD_CONST 15",
+        "LOAD_ARRAY",
+        "PRINT",
+        "ARRAY_LENGTH",
+        "PRINT",
+        "RETURN"
+      ]
+    },
+    "test_dict": {
+      "name": "test_dict",
+      "param_count": 0,
+      "instructions": [
+        "CREATE_DICT",
+        "LOAD_STRING 16",
+        "LOAD_STRING 17",
+        "STORE_DICT",
+        "LOAD_STRING 18",
+        "LOAD_STRING 19",
+        "STORE_DICT",
+        "LOAD_STRING 16",
+        "LOAD_DICT",
+        "PRINT",
+        "LOAD_STRING 18",
+        "LOAD_DICT",
+        "PRINT",
+        "LOAD_STRING 16",
+        "DICT_HAS_KEY",
+        "PRINT",
+        "DICT_LENGTH",
+        "PRINT",
+        "RETURN"
+      ]
+    },
+    "test_file": {
+      "name": "test_file",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 20",
+        "READ_FILE",
+        "PRINT",
+        "RETURN"
+      ]
+    },
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": []
+    }
+  }
+}

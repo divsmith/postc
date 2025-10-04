@@ -1,0 +1,138 @@
+{
+  "constants": [
+    "INTEGER",
+    "FLOAT",
+    "STRING",
+    "IDENTIFIER",
+    "PLUS",
+    "MINUS",
+    "MULTIPLY",
+    "DIVIDE",
+    "PRINT",
+    "EOF",
+    "source_text",
+    "Starting lexer...",
+    "TOKEN_INTEGER",
+    "TOKEN_PLUS",
+    "TOKEN_STRING",
+    "TOKEN_PRINT",
+    "TOKEN_EOF",
+    "Testing lexer...",
+    "5 3 + \\\"Hello\\\" print",
+    "lex"
+  ],
+  "functions": {
+    "TOKEN_INTEGER": {
+      "name": "TOKEN_INTEGER",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 0",
+        "RETURN"
+      ]
+    },
+    "TOKEN_FLOAT": {
+      "name": "TOKEN_FLOAT",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 1",
+        "RETURN"
+      ]
+    },
+    "TOKEN_STRING": {
+      "name": "TOKEN_STRING",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 2",
+        "RETURN"
+      ]
+    },
+    "TOKEN_IDENTIFIER": {
+      "name": "TOKEN_IDENTIFIER",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 3",
+        "RETURN"
+      ]
+    },
+    "TOKEN_PLUS": {
+      "name": "TOKEN_PLUS",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 4",
+        "RETURN"
+      ]
+    },
+    "TOKEN_MINUS": {
+      "name": "TOKEN_MINUS",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 5",
+        "RETURN"
+      ]
+    },
+    "TOKEN_MULTIPLY": {
+      "name": "TOKEN_MULTIPLY",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 6",
+        "RETURN"
+      ]
+    },
+    "TOKEN_DIVIDE": {
+      "name": "TOKEN_DIVIDE",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 7",
+        "RETURN"
+      ]
+    },
+    "TOKEN_PRINT": {
+      "name": "TOKEN_PRINT",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 8",
+        "RETURN"
+      ]
+    },
+    "TOKEN_EOF": {
+      "name": "TOKEN_EOF",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 9",
+        "RETURN"
+      ]
+    },
+    "lex": {
+      "name": "lex",
+      "param_count": 1,
+      "instructions": [
+        "LOAD_VAR 10",
+        "LOAD_STRING 11",
+        "PRINT",
+        "CALL 12",
+        "CALL 12",
+        "CALL 13",
+        "CALL 14",
+        "CALL 15",
+        "CALL 16",
+        "RETURN"
+      ]
+    },
+    "lexer_test": {
+      "name": "lexer_test",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 17",
+        "PRINT",
+        "LOAD_STRING 18",
+        "CALL 19",
+        "RETURN"
+      ]
+    },
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": []
+    }
+  }
+}

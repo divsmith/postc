@@ -1,0 +1,386 @@
+# PostC Self-Compiler - Error Handling Tests
+# Tests for error conditions and error message quality
+
+# Test 1: Lexical errors
+:test_lexical_errors 0 param
+  "Testing lexical error handling..." print
+
+  # Unterminated string literal
+  "\"Unterminated string print" print
+
+  # Invalid number format
+  "12.34.56 print" print
+
+  # Unexpected character
+  "5 @ 3 + print" print
+
+  # Missing closing quote
+  "'Single quoted string' print" print
+;
+
+# Test 2: Syntax errors
+:test_syntax_errors 0 param
+  "Testing syntax error handling..." print
+
+  # Missing semicolon
+  "let x 42 print" print
+
+  # Incomplete function definition
+  ":incomplete_func 1 param x" print
+
+  # Unclosed parentheses
+  "(5 + 3 print" print
+
+  # Unclosed brackets
+  "[1, 2, 3 print" print
+
+  # Unclosed braces
+  "{key: value print" print
+;
+
+# Test 3: Semantic errors
+:test_semantic_errors 0 param
+  "Testing semantic error handling..." print
+
+  # Undefined variable
+  "undefined_var print" print
+
+  # Wrong number of function arguments
+  ":test_func 2 param a b a b + return ;" print
+  "test_func 1 call print" print
+
+  # Type mismatch in operation
+  "5 \"hello\" + print" print
+
+  # Division by zero (runtime error)
+  "10 0 / print" print
+;
+
+# Test 4: Function definition errors
+:test_function_errors 0 param
+  "Testing function definition error handling..." print
+
+  # Function redefinition
+  ":test_func 1 param x x print return ;" print
+  ":test_func 1 param y y print return ;" print
+
+  # Function call without definition
+  "undefined_func call print" print
+
+  # Wrong parameter count in call
+  ":add 2 param a b a b + return ;" print
+  "add 5 call print" print
+;
+
+# Test 5: Variable errors
+:test_variable_errors 0 param
+  "Testing variable error handling..." print
+
+  # Variable redeclaration
+  "let x 42" print
+  "let x 24" print
+
+  # Immutable variable modification
+  "let y 10" print
+  "y 20 =" print
+
+  # Using variable before declaration
+  "z print" print
+  "let z 42" print
+;
+
+# Test 6: Array errors
+:test_array_errors 0 param
+  "Testing array error handling..." print
+
+  # Array index out of bounds
+  "[1, 2, 3] :arr" print
+  "arr 5 array_load print" print
+
+  # Negative array index
+  "arr -1 array_load print" print
+
+  # Non-integer array index
+  "arr 1.5 array_load print" print
+
+  # Array store with wrong index type
+  "arr \"invalid\" 99 array_store" print
+;
+
+# Test 7: Dictionary errors
+:test_dictionary_errors 0 param
+  "Testing dictionary error handling..." print
+
+  # Accessing non-existent key
+  "{} :dict" print
+  "dict \"nonexistent\" dict_load print" print
+
+  # Using non-string key
+  "dict 42 \"value\" dict_store" print
+
+  # Dictionary key case sensitivity
+  "dict \"Key\" \"value\" dict_store" print
+  "dict \"key\" dict_load print" print
+;
+
+# Test 8: String errors
+:test_string_errors 0 param
+  "Testing string error handling..." print
+
+  # String index out of bounds
+  "\"hello\" 10 string_substring print" print
+
+  # Negative string index
+  "\"hello\" -1 string_substring print" print
+
+  # Invalid substring length
+  "\"hello\" 2 string_substring 10 print" print
+;
+
+# Test 9: Control flow errors
+:test_control_flow_errors 0 param
+  "Testing control flow error handling..." print
+
+  # If without condition
+  "if \"no condition\" print ;" print
+
+  # Else without if
+  "5 3 + print else \"invalid else\" print ;" print
+
+  # While without condition
+  "while \"no condition\" print ;" print
+
+  # For without body
+  "5 :i" print
+;
+
+# Test 10: Stack operation errors
+:test_stack_errors 0 param
+  "Testing stack operation error handling..." print
+
+  # Drop on empty stack
+  "drop print" print
+
+  # Insufficient operands for operation
+  "+ print" print
+
+  # Too many operands for unary operation
+  "5 3 = print" print
+;
+
+# Test 11: I/O errors
+:test_io_errors 0 param
+  "Testing I/O error handling..." print
+
+  # Reading from non-existent file
+  "\"nonexistent.txt\" read_file print" print
+
+  # Writing to read-only location (simulated)
+  "\"/readonly/file.txt\" \"content\" write_file print" print
+
+  # Invalid file operation
+  "42 read_file print" print
+;
+
+# Test 12: Complex error scenarios
+:test_complex_errors 0 param
+  "Testing complex error scenarios..." print
+
+  # Nested function call errors
+  ":outer 1 param x" print
+    ":inner 1 param y" print
+      "undefined_var print" print
+      "y return" print
+    ";" print
+    "x inner call return" print
+  ";" print
+
+  "5 outer call print" print
+
+  # Error in array with function calls
+  "[add 1 2 call, subtract 5 3 call, undefined_func call] print" print
+
+  # Error in dictionary with complex values
+  "{func: add 1 2 call, error: nonexistent call} print" print
+;
+
+# Test 13: Recovery from errors
+:test_error_recovery 0 param
+  "Testing error recovery..." print
+
+  # Valid code after error
+  "let x 42" print
+  "undefined_var print" print
+  "x print" print
+
+  # Multiple errors in sequence
+  "let y 24" print
+  "z 10 =" print
+  "y print" print
+;
+
+# Test 14: Edge case errors
+:test_edge_case_errors 0 param
+  "Testing edge case errors..." print
+
+  # Empty program
+  "" print
+
+  # Only whitespace and comments
+  "   " print
+
+  # Single token programs
+  "42" print
+  "\"hello\"" print
+  "print" print
+
+  # Maximum values
+  "999999999999999999999 1 + print" print
+
+  # Minimum values
+  "-999999999999999999999 1 - print" print
+;
+
+# Test 15: Comment handling errors
+:test_comment_errors 0 param
+  "Testing comment error handling..." print
+
+  # Unclosed multi-line comment
+  "/* Unclosed comment" print
+
+  # Nested comments
+  "/* Outer /* Inner */ comment */" print
+
+  # Comment in string
+  "\"This has /* fake comment */ in string\" print" print
+;
+
+# Test 16: Operator precedence errors
+:test_operator_precedence_errors 0 param
+  "Testing operator precedence error handling..." print
+
+  # Ambiguous expressions
+  "5 3 2 + * print" print
+
+  # Missing operators
+  "5 3 2 print" print
+
+  # Extra operators
+  "5 + 3 + print" print
+;
+
+# Test 17: Function scoping errors
+:test_function_scoping_errors 0 param
+  "Testing function scoping error handling..." print
+
+  # Variable access from wrong scope
+  ":func1 0 param" print
+    "let local_var 42" print
+  ";" print
+
+  ":func2 0 param" print
+    "local_var print" print
+  ";" print
+
+  "func1 call" print
+  "func2 call" print
+
+  # Function call in wrong context
+  "let x add 1 2 call" print
+;
+
+# Test 18: Type conversion errors
+:test_type_conversion_errors 0 param
+  "Testing type conversion error handling..." print
+
+  # String to number conversion
+  "\"42\" 8 / print" print
+
+  # Number to string conversion
+  "42 \"hello\" string_concat print" print
+
+  # Boolean in arithmetic
+  "true 5 + print" print
+
+  # Array in arithmetic
+  "[1, 2, 3] 1 + print" print
+;
+
+# Test 19: Memory and resource errors
+:test_resource_errors 0 param
+  "Testing resource error handling..." print
+
+  # Stack overflow (deep recursion)
+  ":deep_recursion 1 param n" print
+    "n 10000 < if n 1 + deep_recursion return ;" print
+    "n return" print
+  ";" print
+
+  "0 deep_recursion call print" print
+
+  # Large data structures
+  ":create_large_array 1 param size" print
+    "[] :arr" print
+    "0 :i" print
+    "i size < if" print
+      "i arr push :arr" print
+      "i 1 + :i" print
+      "i size < if i arr push :arr ;" print
+    ";" print
+    "arr return" print
+  ";" print
+
+  "10000 create_large_array call array_length print" print
+;
+
+# Test 20: Compilation pipeline errors
+:test_compilation_errors 0 param
+  "Testing compilation pipeline error handling..." print
+
+  # Lexer fails but parser tries to continue
+  "\"unterminated 5 + print" print
+
+  # Parser fails but code generator tries to continue
+  "let x 42 y 24 + print" print
+
+  # Code generator fails but execution tries to continue
+  ":func_with_error 0 param" print
+    "nonexistent_var print" print
+    "return" print
+  ";" print
+
+  "func_with_error call" print
+;
+
+# Run all error tests
+:test_all_errors 0 param
+  "=== Running PostC Error Handling Tests ===" print
+  "" print
+
+  test_lexical_errors
+  test_syntax_errors
+  test_semantic_errors
+  test_function_errors
+  test_variable_errors
+  test_array_errors
+  test_dictionary_errors
+  test_string_errors
+  test_control_flow_errors
+  test_stack_errors
+  test_io_errors
+  test_complex_errors
+  test_error_recovery
+  test_edge_case_errors
+  test_comment_errors
+  test_operator_precedence_errors
+  test_function_scoping_errors
+  test_type_conversion_errors
+  test_resource_errors
+  test_compilation_errors
+
+  "" print
+  "=== All Error Handling Tests Completed ===" print
+;
+
+# Run the tests
+test_all_errors

@@ -1,0 +1,94 @@
+# Test file to verify Turing completeness features
+
+# Test 1: Variables (mutable state)
+: test_variables 0 param
+  42 let immutable_var
+  10 var mutable_var
+
+  # Test reading immutable variable
+  immutable_var print
+
+  # Test reading and modifying mutable variable
+  mutable_var print
+  mutable_var 5 + var mutable_var
+  mutable_var print
+;
+
+# Test 2: Control flow (if/else)
+: test_control_flow 0 param
+  5 var x
+  x 0 > if
+    "positive" print
+  else
+    "non-positive" print
+  ;
+  x 1 - var x
+  x 0 > if
+    "positive" print
+  else
+    "non-positive" print
+  ;
+;
+
+# Test 3: Functions with recursion (factorial)
+: factorial 1 param
+  dup 1 <= if
+    drop 1
+  else
+    dup 1 - factorial *
+  ;
+;
+
+# Test 4: Arrays
+: test_arrays 0 param
+  3 create_array
+  10 0 store_array
+  20 1 store_array
+  30 2 store_array
+
+  0 load_array print
+  1 load_array print
+  2 load_array print
+  array_length print
+;
+
+# Test 5: Dictionaries
+: test_dictionaries 0 param
+  create_dict
+  "key1" "value1" store_dict
+  "key2" "value2" store_dict
+
+  "key1" load_dict print
+  "key2" load_dict print
+  "key1" dict_has_key print
+  "nonexistent" dict_has_key print
+  dict_length print
+;
+
+# Test 6: I/O operations
+: test_io 0 param
+  "README.md" read_file print
+;
+
+# Main function
+: main 0 param
+  "=== Testing Variables ===" print
+  test_variables
+
+  "=== Testing Control Flow ===" print
+  test_control_flow
+
+  "=== Testing Recursion (Factorial of 5) ===" print
+  5 factorial print
+
+  "=== Testing Arrays ===" print
+  test_arrays
+
+  "=== Testing Dictionaries ===" print
+  test_dictionaries
+
+  "=== Testing I/O ===" print
+  test_io
+
+  "All Turing completeness tests completed!" print
+;

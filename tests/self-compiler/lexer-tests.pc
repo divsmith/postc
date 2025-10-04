@@ -1,0 +1,192 @@
+# PostC Self-Compiler - Lexer Tests
+# Comprehensive tests for tokenization of all language constructs
+
+# Test 1: Basic arithmetic operators
+:test_basic_arithmetic 0 param
+  "Testing basic arithmetic operators..." print
+  "5 3 + 2 * 10 /" print
+;
+
+# Test 2: Comparison operators
+:test_comparison_operators 0 param
+  "Testing comparison operators..." print
+  "x 5 < y 10 > z 3 <= w 7 >= a b = c d !=" print
+;
+
+# Test 3: Variable declarations
+:test_variable_declarations 0 param
+  "Testing variable declarations..." print
+  "let x 42" print
+  "var y 24" print
+  "let name \"Hello\"" print
+  "var flag true" print
+;
+
+# Test 4: Function definitions
+:test_function_definitions 0 param
+  "Testing function definitions..." print
+  ":add 2 param a b + return ;" print
+  ":multiply 3 param x y z * * return ;" print
+  ":print_msg 1 param msg msg print return ;" print
+;
+
+# Test 5: Control structures
+:test_control_structures 0 param
+  "Testing control structures..." print
+  "x 0 > if \"positive\" print ;" print
+  "x 0 > if \"positive\" print else \"non-positive\" print ;" print
+  "i 0 < if i 1 + :i i 10 < if i \"loop\" print ; ;" print
+;
+
+# Test 6: Array literals
+:test_array_literals 0 param
+  "Testing array literals..." print
+  "[1, 2, 3]" print
+  "[\"hello\", \"world\"]" print
+  "[1, \"mixed\", true]" print
+  "[[1, 2], [3, 4]]" print
+;
+
+# Test 7: Dictionary literals
+:test_dictionary_literals 0 param
+  "Testing dictionary literals..." print
+  "{name: \"John\", age: 30}" print
+  "{items: [1, 2, 3], count: 3}" print
+  "{\"key with spaces\": 42}" print
+;
+
+# Test 8: String operations
+:test_string_operations 0 param
+  "Testing string operations..." print
+  "\"hello\" \"world\" string_concat print" print
+  "\"hello\" 2 string_substring print" print
+  "\"hello world\" \"world\" string_indexof print" print
+  "\"hello\" string_length print" print
+;
+
+# Test 9: Stack operations
+:test_stack_operations 0 param
+  "Testing stack operations..." print
+  "5 3 dup swap drop over rot" print
+;
+
+# Test 10: I/O operations
+:test_io_operations 0 param
+  "Testing I/O operations..." print
+  "\"Enter name: \" print read_stdin print" print
+  "\"data.txt\" read_file print" print
+;
+
+# Test 11: Complex expressions
+:test_complex_expressions 0 param
+  "Testing complex expressions..." print
+  "x y + z * w /" print
+  "arr [idx] array_load print" print
+  "dict \"key\" dict_load print" print
+  "func arg1 arg2 arg3 call print" print
+;
+
+# Test 12: Nested structures
+:test_nested_structures 0 param
+  "Testing nested structures..." print
+  "x 0 > if y 0 > if \"both positive\" print else \"x positive, y not\" print else \"x not positive\" print ;" print
+  "[[1, 2], [3, 4]] 0 array_load 1 array_load print" print
+;
+
+# Test 13: Comments and whitespace
+:test_comments_whitespace 0 param
+  "Testing comments and whitespace..." print
+  "5   3 +  # This is a comment" print
+  "  let   x   42  ;  # Another comment" print
+  "/* Multi-line comment
+     spanning multiple lines */" print
+;
+
+# Test 14: Boolean literals
+:test_boolean_literals 0 param
+  "Testing boolean literals..." print
+  "true print" print
+  "false print" print
+  "x true = print" print
+  "y false = print" print
+;
+
+# Test 15: Numbers and identifiers
+:test_numbers_identifiers 0 param
+  "Testing numbers and identifiers..." print
+  "42 3.14 -17 +5.5 _private_var camelCase PascalCase" print
+  "123456789 0 -0 3.14159" print
+;
+
+# Test 16: Special characters and punctuation
+:test_special_characters 0 param
+  "Testing special characters..." print
+  "( ) { } [ ] , : ;" print
+  "\"string with (parens)\" print" print
+  "{func: \"value with, comma\"} print" print
+;
+
+# Test 17: Edge cases
+:test_edge_cases 0 param
+  "Testing edge cases..." print
+  "\"\" print" print  # Empty string
+  "[] print" print   # Empty array
+  "{} print" print   # Empty dict
+  "0 0 = print" print # Zero values
+  "x x = print" print # Self assignment
+;
+
+# Test 18: Long expressions
+:test_long_expressions 0 param
+  "Testing long expressions..." print
+  "a b + c * d / e f - g h * + i j k l + * / print" print
+  "arr1 0 array_load arr2 1 array_load + print" print
+;
+
+# Test 19: Function calls with complex arguments
+:test_function_calls 0 param
+  "Testing function calls..." print
+  "add x y call print" print
+  "multiply a b c call print" print
+  "process [1, 2, 3] {key: \"value\"} call print" print
+;
+
+# Test 20: Mixed data types
+:test_mixed_types 0 param
+  "Testing mixed data types..." print
+  "42 \"hello\" true [1, 2] {num: 1, str: \"test\"} print" print
+  "x 42 = y \"world\" = z [x, y] = print" print
+;
+
+# Run all lexer tests
+:test_all_lexer 0 param
+  "=== Running PostC Lexer Tests ===" print
+  "" print
+
+  test_basic_arithmetic
+  test_comparison_operators
+  test_variable_declarations
+  test_function_definitions
+  test_control_structures
+  test_array_literals
+  test_dictionary_literals
+  test_string_operations
+  test_stack_operations
+  test_io_operations
+  test_complex_expressions
+  test_nested_structures
+  test_comments_whitespace
+  test_boolean_literals
+  test_numbers_identifiers
+  test_special_characters
+  test_edge_cases
+  test_long_expressions
+  test_function_calls
+  test_mixed_types
+
+  "" print
+  "=== All Lexer Tests Completed ===" print
+;
+
+# Run the tests
+test_all_lexer

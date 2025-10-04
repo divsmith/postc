@@ -1,0 +1,302 @@
+# PostC Self-Compiler - Code Generator Tests
+# Comprehensive tests for bytecode generation for different features
+
+# Test 1: Basic arithmetic operations
+:test_basic_arithmetic_codegen 0 param
+  "Testing basic arithmetic bytecode generation..." print
+  "5 3 + print" print
+  "10 2 * 3 / print" print
+  "15 4 - 2 + print" print
+;
+
+# Test 2: Variable declarations and assignments
+:test_variable_codegen 0 param
+  "Testing variable bytecode generation..." print
+  "let x 42" print
+  "var y 24" print
+  "x 5 = print" print
+  "y 10 = print" print
+;
+
+# Test 3: Function definitions and calls
+:test_function_codegen 0 param
+  "Testing function bytecode generation..." print
+  ":add 2 param
+    a b + return
+  ;" print
+
+  ":multiply 2 param x y
+    x y * return
+  ;" print
+
+  "5 3 add call print" print
+  "4 7 multiply call print" print
+;
+
+# Test 4: Control flow structures
+:test_control_flow_codegen 0 param
+  "Testing control flow bytecode generation..." print
+  "x 5 > if \"greater\" print ;" print
+
+  "x 0 > if
+    \"positive\" print
+  else
+    \"non-positive\" print
+  ;" print
+
+  "i 0 =
+  i 5 < if
+    i print
+    i 1 + :i
+    i 5 < if i print ;
+  ;" print
+;
+
+# Test 5: Array operations
+:test_array_codegen 0 param
+  "Testing array bytecode generation..." print
+  "[1, 2, 3, 4] :arr" print
+  "arr 0 array_load print" print
+  "arr 2 99 array_store" print
+  "arr 2 array_load print" print
+  "arr array_length print" print
+;
+
+# Test 6: Dictionary operations
+:test_dictionary_codegen 0 param
+  "Testing dictionary bytecode generation..." print
+  "{name: \"Alice\", age: 25} :person" print
+  "person \"name\" dict_load print" print
+  "person \"city\" \"NYC\" dict_store" print
+  "person \"city\" dict_load print" print
+  "person dict_length print" print
+;
+
+# Test 7: String operations
+:test_string_codegen 0 param
+  "Testing string bytecode generation..." print
+  "\"Hello\" \" World\" string_concat print" print
+  "\"Hello World\" 6 string_substring print" print
+  "\"Programming\" \"gram\" string_indexof print" print
+  "\"Hello\" string_length print" print
+;
+
+# Test 8: Stack operations
+:test_stack_codegen 0 param
+  "Testing stack operations bytecode generation..." print
+  "5 3 dup + print" print
+  "10 20 swap - print" print
+  "1 2 3 4 drop * print" print
+  "5 3 over + print" print
+  "1 2 3 4 rot + print" print
+;
+
+# Test 9: I/O operations
+:test_io_codegen 0 param
+  "Testing I/O bytecode generation..." print
+  "\"Enter value: \" print read_stdin :val" print
+  "\"data.txt\" read_file :content" print
+  "val print" print
+  "content print" print
+;
+
+# Test 10: Complex expressions
+:test_complex_expr_codegen 0 param
+  "Testing complex expression bytecode generation..." print
+  "x y + z * print" print
+  "a b * c d / + print" print
+  "arr [idx] array_load val * print" print
+  "dict \"key\" dict_load func arg call + print" print
+;
+
+# Test 11: Nested data structures
+:test_nested_structures_codegen 0 param
+  "Testing nested structures bytecode generation..." print
+  "[[1, 2], [3, 4]] :matrix" print
+  "matrix 0 array_load 1 array_load print" print
+  "{users: [{\"name\": \"Alice\"}, {\"name\": \"Bob\"}], active: true} :data" print
+  "data \"users\" dict_load 0 array_load \"name\" dict_load print" print
+;
+
+# Test 12: Boolean operations
+:test_boolean_codegen 0 param
+  "Testing boolean bytecode generation..." print
+  "x 0 > print" print
+  "a b = print" print
+  "x y < z > | print" print
+  "flag1 flag2 = ! print" print
+;
+
+# Test 13: Recursive functions
+:test_recursive_codegen 0 param
+  "Testing recursive function bytecode generation..." print
+  ":fib 1 param n
+    n 0 == if 0 return ;
+    n 1 == if 1 return ;
+    n 1 - fib n 2 - fib + return
+  ;" print
+
+  ":factorial 1 param n
+    n 0 == if 1 return ;
+    n 1 == if 1 return ;
+    n n 1 - factorial * return
+  ;" print
+
+  "10 fib call print" print
+  "5 factorial call print" print
+;
+
+# Test 14: Multiple functions
+:test_multiple_functions_codegen 0 param
+  "Testing multiple functions bytecode generation..." print
+  ":add 2 param a b a b + return ;" print
+  ":sub 2 param a b a b - return ;" print
+  ":mul 2 param a b a b * return ;" print
+  ":div 2 param a b a b / return ;" print
+
+  "10 5 add call print" print
+  "10 5 sub call print" print
+  "10 5 mul call print" print
+  "10 5 div call print" print
+;
+
+# Test 15: Function with array/dict parameters
+:test_complex_params_codegen 0 param
+  "Testing complex parameter bytecode generation..." print
+  ":process_array 1 param arr
+    arr 0 array_load arr 1 array_load + print
+  ;" print
+
+  ":process_dict 1 param dict
+    dict \"key\" dict_load print
+  ;" print
+
+  "[10, 20] process_array call" print
+  "{key: \"value\"} process_dict call" print
+;
+
+# Test 16: Loops with complex bodies
+:test_complex_loops_codegen 0 param
+  "Testing complex loop bytecode generation..." print
+  ":sum_array 1 param arr
+    0 :sum
+    0 :i
+    arr array_length :len
+    i len < if
+      arr i array_load :val
+      sum val + :sum
+      i 1 + :i
+      i len < if arr i array_load val sum val + :sum ;;
+    ;
+    sum print
+  ;" print
+
+  "[1, 2, 3, 4, 5] sum_array call" print
+;
+
+# Test 17: Conditional expressions with complex conditions
+:test_complex_conditionals_codegen 0 param
+  "Testing complex conditional bytecode generation..." print
+  ":compare 2 param a b
+    a b > if
+      \"a > b\" print
+    else a b < if
+      \"a < b\" print
+    else
+      \"a == b\" print
+    ;;
+  ;" print
+
+  "10 5 compare call" print
+  "5 10 compare call" print
+  "5 5 compare call" print
+;
+
+# Test 18: String concatenation and manipulation
+:test_string_manipulation_codegen 0 param
+  "Testing string manipulation bytecode generation..." print
+  ":build_message 2 param name age
+    \"Hello, \" name string_concat :msg
+    \"! You are \" msg string_concat :msg
+    age msg string_concat :msg
+    \" years old.\" msg string_concat print
+  ;" print
+
+  "\"Alice\" 25 build_message call" print
+;
+
+# Test 19: Array and dictionary creation in functions
+:test_data_creation_codegen 0 param
+  "Testing data creation bytecode generation..." print
+  ":create_person 2 param name age
+    {name: name, age: age, active: true} :person
+    person return
+  ;" print
+
+  ":create_matrix 2 param rows cols
+    [] :matrix
+    0 :i
+    i rows < if
+      [] :row
+      0 :j
+      j cols < if
+        i j * :val
+        row val push :row
+        j 1 + :j
+        j cols < if i j * val row val push ;;
+      ;
+      matrix row push :matrix
+      i 1 + :i
+      i rows < if [] row 0 j j cols < if i j * val row val push ;;
+    ;
+    matrix return
+  ;" print
+
+  "\"John\" 30 create_person call \"name\" dict_load print" print
+  "3 3 create_matrix call 1 array_load 2 array_load print" print
+;
+
+# Test 20: Error handling in code generation
+:test_error_codegen 0 param
+  "Testing error handling in code generation..." print
+  ":undefined_var 0 param
+    nonexistent_var print
+  ;" print
+
+  ":type_mismatch 0 param
+    5 \"hello\" + print
+  ;" print
+;
+
+# Run all code generator tests
+:test_all_codegen 0 param
+  "=== Running PostC Code Generator Tests ===" print
+  "" print
+
+  test_basic_arithmetic_codegen
+  test_variable_codegen
+  test_function_codegen
+  test_control_flow_codegen
+  test_array_codegen
+  test_dictionary_codegen
+  test_string_codegen
+  test_stack_codegen
+  test_io_codegen
+  test_complex_expr_codegen
+  test_nested_structures_codegen
+  test_boolean_codegen
+  test_recursive_codegen
+  test_multiple_functions_codegen
+  test_complex_params_codegen
+  test_complex_loops_codegen
+  test_complex_conditionals_codegen
+  test_string_manipulation_codegen
+  test_data_creation_codegen
+  test_error_codegen
+
+  "" print
+  "=== All Code Generator Tests Completed ===" print
+;
+
+# Run the tests
+test_all_codegen

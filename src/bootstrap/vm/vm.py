@@ -54,7 +54,28 @@ class Opcode(Enum):
     
     # I/O
     PRINT = "PRINT"
-    
+    READ_STDIN = "READ_STDIN"
+    READ_FILE = "READ_FILE"
+
+    # Arrays
+    CREATE_ARRAY = "CREATE_ARRAY"
+    LOAD_ARRAY = "LOAD_ARRAY"
+    STORE_ARRAY = "STORE_ARRAY"
+    ARRAY_LENGTH = "ARRAY_LENGTH"
+
+    # Dictionaries
+    CREATE_DICT = "CREATE_DICT"
+    LOAD_DICT = "LOAD_DICT"
+    STORE_DICT = "STORE_DICT"
+    DICT_HAS_KEY = "DICT_HAS_KEY"
+    DICT_LENGTH = "DICT_LENGTH"
+
+    # Strings
+    STRING_LENGTH = "STRING_LENGTH"
+    STRING_CONCAT = "STRING_CONCAT"
+    STRING_SUBSTRING = "STRING_SUBSTRING"
+    STRING_INDEXOF = "STRING_INDEXOF"
+
     # Halt
     HALT = "HALT"
 
@@ -125,6 +146,7 @@ class VM:
         self.call_stack: List[Frame] = []
         self.global_variables: Dict[str, Union[int, float, str, bool]] = {}
         self.debug_mode = False
+
         
     def push(self, value: Union[int, float, str, bool]):
         """Push a value onto the stack."""
@@ -357,7 +379,7 @@ class VM:
             func_name = self.constants[instruction.operand]
             if func_name not in self.functions:
                 raise VmError(f"Function '{func_name}' not found", line)
-                
+
             func = self.functions[func_name]
             
             # Create a new frame for the function call
@@ -382,7 +404,144 @@ class VM:
         elif opcode == Opcode.HALT:
             while self.call_stack:
                 self.call_stack.pop()
-            
+
+        # Array operations
+        elif opcode == Opcode.CREATE_ARRAY:
+            size = self.pop()
+            if not isinstance(size, int) or size < 0:
+                raise VmError("Array size must be a non-negative integer", line)
+            # Create array as a list of None values
+            array = [None] * size
+            self.push(array)
+
+        elif opcode == Opcode.LOAD_ARRAY:
+            index = self.pop()
+            array = self.pop()
+            if not isinstance(array, list):
+                raise VmError("Expected array for LOAD_ARRAY", line)
+            if not isinstance(index, int) or index < 0 or index >= len(array):
+                raise VmError(f"Array index out of bounds: {index}", line)
+            value = array[index]
+            if value is None:
+                raise VmError(f"Array element at index {index} is uninitialized", line)
+            self.push(value)
+
+        elif opcode == Opcode.STORE_ARRAY:
+            if not isinstance(array, list):
+                raise VmError("Expected array for STORE_ARRAY", line)
+            if not isinstance(index, int) or index < 0 or index >= len(array):
+                raise VmError(f"Array index out of bounds: {index}", line)
+            array[index] = value
+            # Push the array back onto the stack for further operations
+            self.push(array)
+
+        elif opcode == Opcode.ARRAY_LENGTH:
+            array = self.pop()
+            if not isinstance(array, list):
+                raise VmError("Expected array for ARRAY_LENGTH", line)
+            self.push(len(array))
+
+        # Dictionary operations
+        elif opcode == Opcode.CREATE_DICT:
+            # Create empty dictionary
+            dictionary = {}
+            self.push(dictionary)
+
+        elif opcode == Opcode.LOAD_DICT:
+            key = self.pop()
+            dictionary = self.pop()
+            if not isinstance(dictionary, dict):
+                raise VmError("Expected dictionary for LOAD_DICT", line)
+            if key not in dictionary:
+                raise VmError(f"Dictionary key not found: {key}", line)
+            self.push(dictionary[key])
+
+        elif opcode == Opcode.STORE_DICT:
+            value = self.pop()
+            key = self.pop()
+            dictionary = self.pop()
+            if not isinstance(dictionary, dict):
+                raise VmError("Expected dictionary for STORE_DICT", line)
+            dictionary[key] = value
+
+        elif opcode == Opcode.DICT_HAS_KEY:
+            key = self.pop()
+            dictionary = self.pop()
+            if not isinstance(dictionary, dict):
+                raise VmError("Expected dictionary for DICT_HAS_KEY", line)
+            self.push(key in dictionary)
+
+        elif opcode == Opcode.DICT_LENGTH:
+            dictionary = self.pop()
+            if not isinstance(dictionary, dict):
+                raise VmError("Expected dictionary for DICT_LENGTH", line)
+            self.push(len(dictionary))
+
+        # I/O operations
+        elif opcode == Opcode.READ_STDIN:
+            try:
+                user_input = input()
+                self.push(user_input)
+            except EOFError:
+                raise VmError("EOF reached while reading from stdin", line)
+            except KeyboardInterrupt:
+                raise VmError("Input interrupted by user", line)
+
+        elif opcode == Opcode.READ_FILE:
+            filename = self.pop()
+            if not isinstance(filename, str):
+                raise VmError("Expected string filename for READ_FILE", line)
+            try:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                self.push(content)
+            except FileNotFoundError:
+                raise VmError(f"File not found: {filename}", line)
+            except PermissionError:
+                raise VmError(f"Permission denied reading file: {filename}", line)
+            except UnicodeDecodeError:
+                raise VmError(f"Cannot decode file as UTF-8: {filename}", line)
+            except Exception as e:
+                raise VmError(f"Error reading file '{filename}': {str(e)}", line)
+
+        # String operations
+        elif opcode == Opcode.STRING_LENGTH:
+            string = self.pop()
+            if not isinstance(string, str):
+                raise VmError("Expected string for STRING_LENGTH", line)
+            self.push(len(string))
+
+        elif opcode == Opcode.STRING_CONCAT:
+            str2 = self.pop()
+            str1 = self.pop()
+            if not isinstance(str1, str) or not isinstance(str2, str):
+                raise VmError("Expected strings for STRING_CONCAT", line)
+            self.push(str1 + str2)
+
+        elif opcode == Opcode.STRING_SUBSTRING:
+            length = self.pop()
+            start = self.pop()
+            string = self.pop()
+            if not isinstance(string, str):
+                raise VmError("Expected string for STRING_SUBSTRING", line)
+            if not isinstance(start, int) or not isinstance(length, int):
+                raise VmError("Start and length must be integers for STRING_SUBSTRING", line)
+            if start < 0 or start >= len(string):
+                raise VmError(f"Start index out of bounds: {start}", line)
+            if length < 0:
+                raise VmError(f"Length cannot be negative: {length}", line)
+            if start + length > len(string):
+                raise VmError(f"Substring extends beyond string length: start={start}, length={length}", line)
+            self.push(string[start:start + length])
+
+        elif opcode == Opcode.STRING_INDEXOF:
+            substring = self.pop()
+            string = self.pop()
+            if not isinstance(string, str) or not isinstance(substring, str):
+                raise VmError("Expected strings for STRING_INDEXOF", line)
+            index = string.find(substring)
+            self.push(index)
+
         else:
             raise VmError(f"Unknown opcode: {opcode}", line)
 
@@ -404,12 +563,13 @@ def create_functions_from_bytecode(functions_data: dict) -> Dict[str, Function]:
             except ValueError as e:
                 print(f"Warning: {e}")
                 continue
-        
+
         functions[name] = Function(
             name=func_data["name"],
             param_count=func_data["param_count"],
             instructions=instructions
         )
+        print(f"Loaded function: {name} with {len(instructions)} instructions")
     return functions
 
 def run_bytecode_file(filename: str, debug: bool = False):

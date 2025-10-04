@@ -1,0 +1,84 @@
+# PostC Turing Complete Features Test
+# This file demonstrates the new features that make PostC Turing complete
+
+# Array operations
+: create_array_test 0 param
+  # Create an array of size 5
+  5 create_array
+
+  # Store values in the array
+  42 0 store_array
+  17 1 store_array
+  99 2 store_array
+
+  # Load and print values from the array
+  0 load_array print
+  1 load_array print
+  2 load_array print
+
+  # Get array length
+  array_length print
+;
+
+# Dictionary operations
+: create_dict_test 0 param
+  # Create a dictionary
+  create_dict
+
+  # Store key-value pairs
+  "name" "PostC" store_dict
+  "version" "1.0" store_dict
+  "turing_complete" "true" store_dict
+
+  # Load and print values
+  "name" load_dict print
+  "version" load_dict print
+
+  # Check if key exists
+  "turing_complete" dict_has_key print
+  "nonexistent" dict_has_key print
+
+  # Get dictionary length
+  dict_length print
+;
+
+# Input/Output operations
+: io_test 0 param
+  # Read from stdin (this would need user input in a real scenario)
+  # read_stdin print
+
+  # Read from a file
+  "README.md" read_file print
+;
+
+# String manipulation
+: string_test 0 param
+  # Create strings
+  "Hello" "World" string_concat print
+
+  # String length
+  "Hello World" string_length print
+
+  # Substring (start at index 6, length 5)
+  "Hello World" 6 5 string_substring print
+
+  # Find index of substring
+  "Hello World" "World" string_indexof print
+;
+
+# Main program
+: main 0 param
+  "Testing Array Operations:" print
+  create_array_test
+
+  "Testing Dictionary Operations:" print
+  create_dict_test
+
+  "Testing I/O Operations:" print
+  io_test
+
+  "Testing String Operations:" print
+  string_test
+
+  "All tests completed!" print
+;

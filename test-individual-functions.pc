@@ -1,0 +1,81 @@
+# Test individual functions to verify they work
+
+# Test variables
+: test_vars 0 param
+  42 let immutable
+  10 var mutable
+  immutable print
+  mutable print
+  mutable 5 + var mutable
+  mutable print
+;
+
+# Test control flow
+: test_if 0 param
+  5 var x
+  x 0 > if
+    "positive" print
+  else
+    "non-positive" print
+  ;
+;
+
+# Test recursion (factorial)
+: fact 1 param
+  dup 1 <= if
+    drop 1
+  else
+    dup 1 - fact *
+  ;
+;
+
+# Test arrays
+: test_array 0 param
+  3 create_array
+  100 0 store_array
+  200 1 store_array
+  300 2 store_array
+  0 load_array print
+  1 load_array print
+  2 load_array print
+  array_length print
+;
+
+# Test dictionaries
+: test_dict 0 param
+  create_dict
+  "name" "PostC" store_dict
+  "version" "1.0" store_dict
+  "name" load_dict print
+  "version" load_dict print
+  "name" dict_has_key print
+  dict_length print
+;
+
+# Test I/O
+: test_file 0 param
+  "README.md" read_file print
+;
+
+# Main function that calls all tests
+: main 0 param
+  "=== Variables Test ===" print
+  test_vars
+
+  "=== Control Flow Test ===" print
+  test_if
+
+  "=== Recursion Test (Factorial of 4) ===" print
+  4 fact print
+
+  "=== Array Test ===" print
+  test_array
+
+  "=== Dictionary Test ===" print
+  test_dict
+
+  "=== I/O Test ===" print
+  test_file
+
+  "All tests completed!" print
+;

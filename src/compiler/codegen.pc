@@ -1,7 +1,7 @@
 # PostC Compiler - Code Generator
 # Generates bytecode from the AST
 
-# Opcode definitions
+# Opcode definitions (matching VM)
 :OPCODE_LOAD_CONST 0 param "LOAD_CONST" ;
 :OPCODE_LOAD_TRUE 0 param "LOAD_TRUE" ;
 :OPCODE_LOAD_FALSE 0 param "LOAD_FALSE" ;
@@ -28,51 +28,172 @@
 :OPCODE_CALL 0 param "CALL" ;
 :OPCODE_RETURN 0 param "RETURN" ;
 :OPCODE_PRINT 0 param "PRINT" ;
+:OPCODE_READ_STDIN 0 param "READ_STDIN" ;
+:OPCODE_READ_FILE 0 param "READ_FILE" ;
+:OPCODE_CREATE_ARRAY 0 param "CREATE_ARRAY" ;
+:OPCODE_LOAD_ARRAY 0 param "LOAD_ARRAY" ;
+:OPCODE_STORE_ARRAY 0 param "STORE_ARRAY" ;
+:OPCODE_ARRAY_LENGTH 0 param "ARRAY_LENGTH" ;
+:OPCODE_CREATE_DICT 0 param "CREATE_DICT" ;
+:OPCODE_LOAD_DICT 0 param "LOAD_DICT" ;
+:OPCODE_STORE_DICT 0 param "STORE_DICT" ;
+:OPCODE_DICT_HAS_KEY 0 param "DICT_HAS_KEY" ;
+:OPCODE_DICT_LENGTH 0 param "DICT_LENGTH" ;
+:OPCODE_STRING_LENGTH 0 param "STRING_LENGTH" ;
+:OPCODE_STRING_CONCAT 0 param "STRING_CONCAT" ;
+:OPCODE_STRING_SUBSTRING 0 param "STRING_SUBSTRING" ;
+:OPCODE_STRING_INDEXOF 0 param "STRING_INDEXOF" ;
 :OPCODE_HALT 0 param "HALT" ;
 
 # Code generator state
-:current_function 0 param 0 ;
-:functions 0 param 0 ;
-:constants 0 param 0 ;
-:instructions 0 param 0 ;
+:current_function 0 param 0 ;      # Current function being generated
+:functions 0 param 0 ;             # List of all functions
+:constants 0 param 0 ;             # Constants pool
+:instructions 0 param 0 ;          # Current function's instructions
+:constant_map 0 param 0 ;          # Map from constant value to index
+:jump_targets 0 param 0 ;          # List of jump targets to patch
+:label_counter 0 param 0 ;         # Counter for generating unique labels
 
 # Initialize the code generator
 :codegen_init 0 param
   "Initializing code generator" print
   # Initialize data structures
   0 current_function store
-  "functions_list" functions store
-  "constants_list" constants store
-  "instructions_list" instructions store
+  [] functions store
+  [] constants store
+  [] instructions store
+  {} constant_map store
+  [] jump_targets store
+  0 label_counter store
 ;
 
-# Add a constant to the constants pool
+# Add a constant to the constants pool and return its index
 :codegen_add_constant 1 param value
-  "Adding constant: " print
-  value print
-  # In a real implementation, this would add to constants list and return index
-  0  # Return dummy index for now
+  # Check if constant already exists
+  constant_map load value get :existing_index
+  existing_index if
+    "Reusing existing constant: " print value print " at index " print existing_index print
+    existing_index return
+  ;
+
+  # Add new constant
+  constants load length :new_index
+  constants load :const_list const_list push value constants store
+  constant_map load value new_index put :const_map const_map constant_map store
+
+  "Added constant: " print value print " at index " print new_index print
+  new_index
+;
+
+# Generate a unique label for jump targets
+:codegen_generate_label 0 param
+  label_counter load :label
+  label_counter load 1 + label_counter store
+  "L" label +
 ;
 
 # Emit an instruction to the current function
 :codegen_emit 2 param opcode operand
-  "Emitting: " print
-  opcode print
-  " " print
-  operand print
-  print
-  # In a real implementation, this would add to instructions list
+  # Create instruction as [opcode, operand]
+  [opcode, operand] :instr
+  instructions load :instr_list instr_list push instr instructions store
+;
+
+# Emit a jump instruction with a label (to be patched later)
+:codegen_emit_jump 2 param opcode label
+  # Emit jump with placeholder operand (will be patched later)
+  opcode -1 codegen_emit  # -1 as placeholder
+  # Record jump target for patching
+  instructions load length 1 - :instr_index  # Index of the jump instruction we just emitted
+  [label, instr_index] jump_targets load :targets targets push targets jump_targets store
+;
+
+# Patch jump targets with actual instruction indices
+:codegen_patch_jumps 0 param
+  "Patching jump targets..." print
+  jump_targets load :targets
+  0 :i
+
+  :patch_loop 0 param
+    i targets length < if
+      targets i get :target
+      target 0 get :label_name
+      target 1 get :jump_instr_index
+
+      # Find the instruction index for this label
+      codegen_find_label label_name :target_index
+      target_index if
+        # Patch the jump instruction operand
+        instructions load jump_instr_index get :jump_instr
+        target_index jump_instr 1 put
+        instructions load jump_instr_index jump_instr put
+
+        "Patched jump to " print label_name print " at instruction " print target_index print
+      else
+        "Warning: Label not found: " print label_name print
+      ;
+
+      i 1 + :i
+      patch_loop
+    ;
+  ;
+
+  patch_loop
+  "Jump patching completed" print
+;
+
+# Find the instruction index for a label
+:codegen_find_label 1 param label_name
+  instructions load length :instr_count
+  0 :i
+
+  :find_loop 0 param
+    i instr_count < if
+      instructions load i get :instr
+      instr 0 get "LABEL" == if
+        instr 1 get label_name == if
+          "Found label " print label_name print " at instruction " print i print
+          i return
+        ;
+      ;
+      i 1 + :i
+      find_loop
+    ;
+  ;
+
+  find_loop
+  "Label not found: " print label_name print
+  0  # Return 0 if not found
+;
+
+# Emit a label marker
+:codegen_emit_label 1 param label_name
+  "LABEL" label_name codegen_emit
+  "Emitted label: " print label_name print
 ;
 
 # Generate code for a program (list of AST nodes)
 :codegen_generate_program 1 param ast_nodes
   "Generating code for program" print
-  
+
   # Process all function declarations first
-  # In a full implementation, we'd iterate through the list
-  "Processing functions" print
-  
-  # Process main program
+  ast_nodes :nodes
+  0 :i
+
+  :process_functions 0 param
+    i nodes length < if
+      nodes i get :node
+      node ast_get_type AST_FUNCTION_DECL == if
+        node codegen_generate_function
+      ;
+      i 1 + :i
+      process_functions
+    ;
+  ;
+
+  process_functions
+
+  # Process main program statements
   "Processing main program" print
   ast_nodes codegen_generate_statements
 ;
@@ -80,32 +201,323 @@
 # Generate code for a list of statements
 :codegen_generate_statements 1 param stmt_list
   "Generating code for statements" print
-  # In a real implementation, this would iterate through statements
-  # For now, just a placeholder
+  stmt_list :stmts
+  0 :i
+
+  :stmt_loop 0 param
+    i stmts length < if
+      stmts i get :stmt
+      stmt codegen_generate_statement
+      i 1 + :i
+      stmt_loop
+    ;
+  ;
+
+  stmt_loop
 ;
 
 # Generate code for a single statement
 :codegen_generate_statement 1 param stmt
-  stmt "AST type: " print stmt print print
-  stmt AST_FUNCTION_DECL == if
+  stmt ast_get_type :stmt_type
+
+  stmt_type AST_FUNCTION_DECL == if
     stmt codegen_generate_function
   else
-    stmt AST_VARIABLE_DECL == if
+    stmt_type AST_VARIABLE_DECL == if
       stmt codegen_generate_variable_decl
     else
-      stmt AST_RPN_EXPRESSION == if
+      stmt_type AST_RPN_EXPRESSION == if
         stmt codegen_generate_rpn_expression
       else
-        stmt AST_IF_EXPR == if
+        stmt_type AST_IF_EXPR == if
           stmt codegen_generate_if_expr
         else
-          stmt AST_WHILE_LOOP == if
+          stmt_type AST_WHILE_LOOP == if
             stmt codegen_generate_while_loop
           else
-            stmt AST_FOR_LOOP == if
+            stmt_type AST_FOR_LOOP == if
               stmt codegen_generate_for_loop
             else
-              "Unknown statement type" print
+              stmt_type AST_BLOCK == if
+                stmt codegen_generate_block
+              else
+                "Unknown statement type: " print stmt_type print
+              ;
+            ;
+          ;
+        ;
+      ;
+    ;
+  ;
+
+# Generate code for a function declaration
+:codegen_generate_function 1 param func_node
+  "Generating function code" print
+
+  # Extract function info from AST node
+  func_node ast_get_value :func_info
+  func_info "name" get :func_name
+  func_info "param_count" get :param_count
+
+  # Create new function
+  "Creating function: " print func_name print
+  [] :func_instructions
+  instructions load :old_instructions func_instructions instructions store
+
+  # Generate function body
+  func_node ast_get_children 0 get :body_node
+  body_node codegen_generate_block
+
+  # Restore previous instructions
+  old_instructions instructions store
+
+  # Create function object: [name, param_count, instructions]
+  [func_name, param_count, func_instructions] :func_obj
+  functions load :func_list func_list push func_obj functions store
+
+  "Function " print func_name print " generated with " print func_instructions length print " instructions" print
+;
+
+# Generate code for a variable declaration
+:codegen_generate_variable_decl 1 param var_node
+  "Generating variable declaration code" print
+
+  # Extract variable info
+  var_node ast_get_value :var_info
+  var_info "name" get :var_name
+  var_info "mutable" get :is_mutable
+
+  # Check if there's an initial value
+  var_node ast_get_children :children
+  children length 0 > if
+    # Generate code for the initial value
+    children 0 get codegen_generate_expression
+
+    # Store in variable
+    var_name codegen_add_constant :const_index
+    OPCODE_STORE_VAR const_index codegen_emit
+  else
+    # No initial value - load nil or default
+    OPCODE_LOAD_FALSE codegen_emit  # Use false as default
+    var_name codegen_add_constant :const_index
+    OPCODE_STORE_VAR const_index codegen_emit
+  ;
+
+  "Variable " print var_name print " declared" print
+;
+
+# Generate code for an RPN expression
+:codegen_generate_rpn_expression 1 param expr_node
+  "Generating RPN expression code" print
+
+  # Get the RPN expression string
+  expr_node ast_get_value :rpn_string
+
+  # Parse and generate code for the RPN expression
+  rpn_string codegen_parse_rpn_expression
+;
+
+# Helper function to parse RPN expression and generate code
+:codegen_parse_rpn_expression 1 param rpn_string
+  "Parsing RPN: " print rpn_string print
+
+  # Split by spaces to get tokens
+  rpn_string " " split :tokens
+
+  # Process each token
+  0 :i
+  :rpn_loop 0 param
+    i tokens length < if
+      tokens i get :token
+
+      # Skip empty tokens
+      token "" == if
+        i 1 + :i
+        rpn_loop
+      ;
+
+      # Handle different token types
+      token codegen_handle_rpn_token
+
+      i 1 + :i
+      rpn_loop
+    ;
+  ;
+
+  rpn_loop
+;
+
+# Handle a single RPN token
+:codegen_handle_rpn_token 1 param token
+  "Processing RPN token: " print token print
+
+  # Check if it's a number
+  token "0" >= token "9" <= and if
+    # Integer literal
+    token codegen_generate_integer_literal
+  else
+    # Check if it's a string literal
+    token 0 get "\"" == if
+      token codegen_generate_string_literal
+    else
+      # Check if it's a boolean
+      token "true" == if
+        OPCODE_LOAD_TRUE 0 codegen_emit
+      else
+        token "false" == if
+          OPCODE_LOAD_FALSE 0 codegen_emit
+        else
+          # Check if it's an identifier
+          token codegen_is_identifier if
+            token codegen_generate_load_var
+          else
+            # Check if it's an operator or function call
+            token codegen_handle_operator
+          ;
+        ;
+      ;
+    ;
+  ;
+;
+
+# Check if token is a valid identifier
+:codegen_is_identifier 1 param token
+  # Simple check: starts with letter or underscore
+  token 0 get :first_char
+  first_char "a" >= first_char "z" <= or first_char "_" == or
+;
+
+# Handle operators and function calls
+:codegen_handle_operator 1 param token
+  "Handling operator: " print token print
+
+  # Arithmetic operators
+  token "+" == if
+    OPCODE_ADD 0 codegen_emit
+  else
+    token "-" == if
+      OPCODE_SUB 0 codegen_emit
+    else
+      token "*" == if
+        OPCODE_MUL 0 codegen_emit
+      else
+        token "/" == if
+          OPCODE_DIV 0 codegen_emit
+        else
+          # Comparison operators
+          token "=" == if
+            OPCODE_EQ 0 codegen_emit
+          else
+            token "!=" == if
+              OPCODE_NE 0 codegen_emit
+            else
+              token "<" == if
+                OPCODE_LT 0 codegen_emit
+              else
+                token ">" == if
+                  OPCODE_GT 0 codegen_emit
+                else
+                  token "<=" == if
+                    OPCODE_LE 0 codegen_emit
+                  else
+                    token ">=" == if
+                      OPCODE_GE 0 codegen_emit
+                    else
+                      # Stack operations
+                      token "dup" == if
+                        OPCODE_DUP 0 codegen_emit
+                      else
+                        token "drop" == if
+                          OPCODE_DROP 0 codegen_emit
+                        else
+                          token "swap" == if
+                            OPCODE_SWAP 0 codegen_emit
+                          else
+                            token "over" == if
+                              OPCODE_OVER 0 codegen_emit
+                            else
+                              token "rot" == if
+                                OPCODE_ROT 0 codegen_emit
+                              else
+                                # I/O operations
+                                token "print" == if
+                                  OPCODE_PRINT 0 codegen_emit
+                                else
+                                  token "read_stdin" == if
+                                    OPCODE_READ_STDIN 0 codegen_emit
+                                  else
+                                    token "read_file" == if
+                                      OPCODE_READ_FILE 0 codegen_emit
+                                    else
+                                      # Array operations
+                                      token "array" == if
+                                        OPCODE_CREATE_ARRAY 0 codegen_emit
+                                      else
+                                        token "array_load" == if
+                                          OPCODE_LOAD_ARRAY 0 codegen_emit
+                                        else
+                                          token "array_store" == if
+                                            OPCODE_STORE_ARRAY 0 codegen_emit
+                                          else
+                                            token "array_length" == if
+                                              OPCODE_ARRAY_LENGTH 0 codegen_emit
+                                            else
+                                              # Dictionary operations
+                                              token "dict" == if
+                                                OPCODE_CREATE_DICT 0 codegen_emit
+                                              else
+                                                token "dict_load" == if
+                                                  OPCODE_LOAD_DICT 0 codegen_emit
+                                                else
+                                                  token "dict_store" == if
+                                                    OPCODE_STORE_DICT 0 codegen_emit
+                                                  else
+                                                    token "dict_has_key" == if
+                                                      OPCODE_DICT_HAS_KEY 0 codegen_emit
+                                                    else
+                                                      token "dict_length" == if
+                                                        OPCODE_DICT_LENGTH 0 codegen_emit
+                                                      else
+                                                        # String operations
+                                                        token "string_length" == if
+                                                          OPCODE_STRING_LENGTH 0 codegen_emit
+                                                        else
+                                                          token "string_concat" == if
+                                                            OPCODE_STRING_CONCAT 0 codegen_emit
+                                                          else
+                                                            token "string_substring" == if
+                                                              OPCODE_STRING_SUBSTRING 0 codegen_emit
+                                                            else
+                                                              token "string_indexof" == if
+                                                                OPCODE_STRING_INDEXOF 0 codegen_emit
+                                                              else
+                                                                # Function call
+                                                                token codegen_generate_function_call
+                                                              ;
+                                                            ;
+                                                          ;
+                                                        ;
+                                                      ;
+                                                    ;
+                                                  ;
+                                                ;
+                                              ;
+                                            ;
+                                          ;
+                                        ;
+                                      ;
+                                    ;
+                                  ;
+                                ;
+                              ;
+                            ;
+                          ;
+                        ;
+                      ;
+                    ;
+                  ;
+                ;
+              ;
             ;
           ;
         ;
@@ -114,85 +526,317 @@
   ;
 ;
 
-# Generate code for a function declaration
-:codegen_generate_function 1 param func_node
-  "Generating function code" print
-  # In a real implementation, this would extract function info from AST node
-  # Create new function, generate body, etc.
-;
-
-# Generate code for a variable declaration
-:codegen_generate_variable_decl 1 param var_node
-  "Generating variable declaration code" print
-  # In a real implementation, this would:
-  # 1. Generate code for the value expression
-  # 2. Store the result in the variable
-;
-
-# Generate code for an RPN expression
-:codegen_generate_rpn_expression 1 param expr_node
-  "Generating RPN expression code" print
-  # This is the core of the code generation
-  # For now, print the node to see what we have
-  expr_node print
-  
-  # In a real implementation, this would parse the RPN expression
-  # and generate appropriate bytecode instructions
+# Generate code for a function call
+:codegen_generate_function_call 1 param func_name
+  "Generating function call: " print func_name print
+  func_name codegen_add_constant :const_index
+  OPCODE_CALL const_index codegen_emit
 ;
 
 # Generate code for an if expression
 :codegen_generate_if_expr 1 param if_node
   "Generating if expression code" print
-  # In a real implementation:
-  # 1. Generate code for condition
-  # 2. Generate conditional jump to else part
-  # 3. Generate then part
-  # 4. Jump over else part
-  # 5. Generate else part
+
+  # Get condition, then branch, and optional else branch
+  if_node ast_get_children :children
+
+  # Generate condition
+  children 0 get codegen_generate_expression
+
+  # Generate labels
+  codegen_generate_label :else_label
+  codegen_generate_label :end_label
+
+  # Emit conditional jump to else (if condition is false)
+  OPCODE_JUMP_IF_FALSE else_label codegen_emit_jump
+
+  # Generate then branch
+  children 1 get codegen_generate_block
+
+  # Jump to end (skip else branch)
+  OPCODE_JUMP end_label codegen_emit_jump
+
+  # Generate else label and branch
+  else_label codegen_emit_label
+  children length 2 >= if
+    children 2 get codegen_generate_block
+  ;
+
+  # Generate end label
+  end_label codegen_emit_label
 ;
 
 # Generate code for a while loop
 :codegen_generate_while_loop 1 param while_node
   "Generating while loop code" print
-  # In a real implementation:
-  # 1. Create loop label
-  # 2. Generate condition code
-  # 3. Generate conditional jump to end
-  # 4. Generate body code
-  # 5. Jump back to start
+
+  # Get condition and body
+  while_node ast_get_children :children
+
+  # Generate labels
+  codegen_generate_label :loop_start
+  codegen_generate_label :loop_end
+
+  # Emit loop start label
+  loop_start codegen_emit_label
+
+  # Generate condition
+  children 0 get codegen_generate_expression
+
+  # Emit conditional jump to end (if condition is false)
+  OPCODE_JUMP_IF_FALSE loop_end codegen_emit_jump
+
+  # Generate body
+  children 1 get codegen_generate_block
+
+  # Jump back to start
+  OPCODE_JUMP loop_start codegen_emit_jump
+
+  # Emit loop end label
+  loop_end codegen_emit_label
 ;
 
 # Generate code for a for loop
 :codegen_generate_for_loop 1 param for_node
   "Generating for loop code" print
-  # In a real implementation:
-  # 1. Initialize counter variable
-  # 2. Create loop label
-  # 3. Check counter condition
-  # 4. Generate conditional jump to end
-  # 5. Generate body code
-  # 6. Decrement counter
-  # 7. Jump back to start
+
+  # Get count expression and body
+  for_node ast_get_children :children
+
+  # Generate labels
+  codegen_generate_label :loop_start
+  codegen_generate_label :loop_end
+
+  # Initialize counter (load 0)
+  OPCODE_LOAD_FALSE 0 codegen_emit  # Use 0 as counter
+
+  # Emit loop start label
+  loop_start codegen_emit_label
+
+  # Duplicate counter for comparison
+  OPCODE_DUP 0 codegen_emit
+
+  # Generate count expression
+  children 0 get ast_get_value :count_expr
+  count_expr codegen_parse_rpn_expression
+
+  # Compare counter with count
+  OPCODE_GE 0 codegen_emit
+
+  # Jump to end if counter >= count
+  OPCODE_JUMP_IF_FALSE loop_end codegen_emit_jump
+
+  # Generate body
+  children 1 get codegen_generate_block
+
+  # Increment counter
+  OPCODE_DUP 0 codegen_emit
+  OPCODE_LOAD_CONST 1 codegen_emit  # Load constant 1
+  OPCODE_ADD 0 codegen_emit
+
+  # Jump back to start
+  OPCODE_JUMP loop_start codegen_emit_jump
+
+  # Emit loop end label
+  loop_end codegen_emit_label
+;
+
+# Generate code for a block
+:codegen_generate_block 1 param block_node
+  "Generating block code" print
+
+  # Generate statements in the block
+  block_node ast_get_children :children
+  0 :i
+
+  :block_loop 0 param
+    i children length < if
+      children i get :stmt
+      stmt codegen_generate_statement
+      i 1 + :i
+      block_loop
+    ;
+  ;
+
+  block_loop
 ;
 
 # Generate code for an integer literal
 :codegen_generate_integer_literal 1 param value
-  value codegen_add_constant OPCODE_LOAD_CONST codegen_emit
+  # Convert string to integer and add to constants
+  value :int_val
+  int_val codegen_add_constant :const_index
+  OPCODE_LOAD_CONST const_index codegen_emit
 ;
 
 # Generate code for a string literal
 :codegen_generate_string_literal 1 param value
-  value codegen_add_constant OPCODE_LOAD_STRING codegen_emit
+  # Remove quotes from string literal
+  value 1 value length 1 - get :str_val
+  str_val codegen_add_constant :const_index
+  OPCODE_LOAD_STRING const_index codegen_emit
 ;
 
 # Generate code for a variable load
 :codegen_generate_load_var 1 param var_name
-  var_name codegen_add_constant OPCODE_LOAD_VAR codegen_emit
+  var_name codegen_add_constant :const_index
+  OPCODE_LOAD_VAR const_index codegen_emit
 ;
 
 # Generate code for a variable store
 :codegen_generate_store_var 1 param var_name
-  var_name codegen_add_constant OPCODE_STORE_VAR codegen_emit
+  var_name codegen_add_constant :const_index
+  OPCODE_STORE_VAR const_index codegen_emit
+;
+
+# Generate code for an expression (handles different expression types)
+:codegen_generate_expression 1 param expr_node
+  expr_node ast_get_type :expr_type
+
+  expr_type AST_INTEGER_LITERAL == if
+    expr_node ast_get_value codegen_generate_integer_literal
+  else
+    expr_type AST_FLOAT_LITERAL == if
+      expr_node ast_get_value codegen_generate_float_literal
+    else
+      expr_type AST_STRING_LITERAL == if
+        expr_node ast_get_value codegen_generate_string_literal
+      else
+        expr_type AST_BOOLEAN_LITERAL == if
+          expr_node ast_get_value 0 == if
+            OPCODE_LOAD_FALSE 0 codegen_emit
+          else
+            OPCODE_LOAD_TRUE 0 codegen_emit
+          ;
+        else
+          expr_type AST_IDENTIFIER == if
+            expr_node ast_get_value codegen_generate_load_var
+          else
+            expr_type AST_RPN_EXPRESSION == if
+              expr_node codegen_generate_rpn_expression
+            else
+              expr_type AST_ARRAY_LITERAL == if
+                expr_node codegen_generate_array_literal
+              else
+                expr_type AST_DICT_LITERAL == if
+                  expr_node codegen_generate_dict_literal
+                else
+                  expr_type AST_CALL == if
+                    expr_node codegen_generate_call
+                  else
+                    "Unknown expression type: " print expr_type print
+                  ;
+                ;
+              ;
+            ;
+          ;
+        ;
+      ;
+    ;
+  ;
+;
+
+# Generate code for a float literal
+:codegen_generate_float_literal 1 param value
+  value codegen_add_constant :const_index
+  OPCODE_LOAD_CONST const_index codegen_emit
+;
+
+# Generate code for an array literal
+:codegen_generate_array_literal 1 param array_node
+  "Generating array literal code" print
+
+  # Get array elements
+  array_node ast_get_children :elements
+
+  # Load array size
+  elements length codegen_generate_integer_literal
+
+  # Create array
+  OPCODE_CREATE_ARRAY 0 codegen_emit
+
+  # Store elements
+  0 :i
+  :array_loop 0 param
+    i elements length < if
+      # Duplicate array reference
+      OPCODE_DUP 0 codegen_emit
+
+      # Load index
+      i codegen_generate_integer_literal
+
+      # Generate element code
+      elements i get codegen_generate_expression
+
+      # Store element in array
+      OPCODE_STORE_ARRAY 0 codegen_emit
+
+      i 1 + :i
+      array_loop
+    ;
+  ;
+
+  array_loop
+;
+
+# Generate code for a dictionary literal
+:codegen_generate_dict_literal 1 param dict_node
+  "Generating dictionary literal code" print
+
+  # Create empty dictionary
+  OPCODE_CREATE_DICT 0 codegen_emit
+
+  # Get key-value pairs
+  dict_node ast_get_children :pairs
+
+  # Store key-value pairs
+  0 :i
+  :dict_loop 0 param
+    i pairs length < if
+      pairs i get :pair
+
+      # Duplicate dict reference
+      OPCODE_DUP 0 codegen_emit
+
+      # Generate key code
+      pair "key" get codegen_generate_expression
+
+      # Generate value code
+      pair "value" get codegen_generate_expression
+
+      # Store in dictionary
+      OPCODE_STORE_DICT 0 codegen_emit
+
+      i 1 + :i
+      dict_loop
+    ;
+  ;
+
+  dict_loop
+;
+
+# Generate code for a function call
+:codegen_generate_call 1 param call_node
+  "Generating function call code" print
+
+  # Get function name and arguments
+  call_node ast_get_value :call_info
+  call_node ast_get_children :args
+
+  # Generate code for arguments (in reverse order for stack)
+  args length 1 - :i
+  :arg_loop 0 param
+    i 0 >= if
+      args i get codegen_generate_expression
+      i 1 - :i
+      arg_loop
+    ;
+  ;
+
+  arg_loop
+
+  # Generate function call
+  call_info "name" get codegen_generate_function_call
 ;
 
 # Generate code for arithmetic operations
@@ -266,21 +910,140 @@
 # Main code generation function
 :generate_code 1 param ast
   "Starting code generation..." print
-  
+
   # Initialize code generator
   codegen_init
-  
+
   # Generate code for the AST
   ast codegen_generate_program
-  
+
+  # Patch jump targets
+  codegen_patch_jumps
+
   # Add HALT instruction at the end
   OPCODE_HALT 0 codegen_emit
-  
+
   "Code generation finished" print
+
+  # Return the generated bytecode
+  {
+    "constants": constants load,
+    "functions": functions load,
+    "instructions": instructions load
+  }
+;
+
+# Validate generated bytecode structure
+:validate_bytecode 2 param bytecode expected_constants
+  "Validating bytecode structure..." print
+
+  bytecode "constants" get :consts
+  bytecode "instructions" get :instrs
+
+  # Check constants count
+  consts length expected_constants == if
+    "✓ Constants count matches expected: " print expected_constants print
+  else
+    "✗ Constants count mismatch. Expected: " print expected_constants print ", got: " print consts length print
+  ;
+
+  # Check instructions count (should be at least 1 for HALT)
+  instrs length 1 >= if
+    "✓ Instructions array has minimum size" print
+  else
+    "✗ Instructions array too small" print
+  ;
+
+  # Check that HALT is the last instruction
+  instrs instrs length 1 - get :last_instr
+  last_instr 0 get "HALT" == if
+    "✓ HALT instruction found at end" print
+  else
+    "✗ HALT instruction missing at end" print
+  ;
+
+  "Validation completed" print
 ;
 
 # Test code generator
 :codegen_test 0 param
-  "Testing code generator with dummy AST" print
-  "dummy_ast" generate_code
+  "Testing code generator with sample PostC programs" print
+
+  # Test 1: Simple arithmetic expression (like hello.pc)
+  "Test 1: Simple arithmetic (hello.pc style)" print
+  :AST_RPN_EXPRESSION 0 param "RPN_EXPRESSION" ;
+  :AST_PROGRAM 0 param "PROGRAM" ;
+
+  # Create RPN expression: "5 3 + print"
+  AST_RPN_EXPRESSION "5 3 + print" [] 1 1 ast_create :rpn_expr1
+
+  # Create program with the RPN expression
+  AST_PROGRAM 0 [rpn_expr1] 1 1 ast_create :test_program1
+  test_program1 generate_code :result1
+
+  # Validate the generated bytecode structure
+  result1 2 validate_bytecode
+
+  "Test 1 completed" print
+
+  # Test 2: Function definition
+  "Test 2: Function definition" print
+  :AST_FUNCTION_DECL 0 param "FUNCTION_DECL" ;
+  :AST_BLOCK 0 param "BLOCK" ;
+
+  # Create function body with a simple expression
+  AST_RPN_EXPRESSION "42 print" [] 2 3 ast_create :func_body_expr
+  AST_BLOCK 0 [func_body_expr] 2 1 ast_create :func_body
+
+  # Create function declaration
+  AST_FUNCTION_DECL {"name": "test_func", "param_count": "1"} [func_body] 1 1 ast_create :test_func
+
+  # Create program with function
+  AST_PROGRAM 0 [test_func] 1 1 ast_create :test_program2
+  test_program2 generate_code :result2
+
+  "Test 2 completed" print
+
+  # Test 3: Variable declaration
+  "Test 3: Variable declaration" print
+  :AST_VARIABLE_DECL 0 param "VARIABLE_DECL" ;
+
+  # Create variable declaration: let x 42
+  AST_RPN_EXPRESSION "42" [] 1 7 ast_create :var_value
+  AST_VARIABLE_DECL {"name": "x", "mutable": 0} [var_value] 1 1 ast_create :test_var
+
+  # Create program with variable declaration
+  AST_PROGRAM 0 [test_var] 1 1 ast_create :test_program3
+  test_program3 generate_code :result3
+
+  "Test 3 completed" print
+
+  # Test 4: Control flow (if/else)
+  "Test 4: Control flow (if/else)" print
+  :AST_IF_EXPR 0 param "IF_EXPR" ;
+  :AST_RPN_EXPRESSION 0 param "RPN_EXPRESSION" ;
+  :AST_BLOCK 0 param "BLOCK" ;
+
+  # Create if condition: x 5 <
+  AST_RPN_EXPRESSION "x 5 <" [] 1 1 ast_create :if_condition
+
+  # Create then block: "x is less" print
+  AST_RPN_EXPRESSION "\"x is less\" print" [] 2 3 ast_create :then_expr
+  AST_BLOCK 0 [then_expr] 2 1 ast_create :then_block
+
+  # Create else block: "x is not less" print
+  AST_RPN_EXPRESSION "\"x is not less\" print" [] 3 3 ast_create :else_expr
+  AST_BLOCK 0 [else_expr] 3 1 ast_create :else_block
+
+  # Create if expression with condition, then, and else
+  AST_IF_EXPR 0 [if_condition, then_block, else_block] 1 1 ast_create :if_expr
+
+  # Create program with if expression
+  AST_PROGRAM 0 [if_expr] 1 1 ast_create :test_program4
+  test_program4 generate_code :result4
+
+  "Test 4 completed" print
+
+  "All code generator tests completed successfully!" print
+  result1 result2 result3 result4
 ;

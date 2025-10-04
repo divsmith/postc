@@ -1,0 +1,45 @@
+{
+  "constants": [
+    "a",
+    "b",
+    "return",
+    5,
+    3,
+    42,
+    "x",
+    10,
+    20,
+    "add"
+  ],
+  "functions": {
+    "add": {
+      "name": "add",
+      "param_count": 2,
+      "instructions": [
+        "LOAD_VAR 0",
+        "LOAD_VAR 1",
+        "ADD",
+        "LOAD_VAR 2",
+        "RETURN"
+      ]
+    },
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_CONST 3",
+        "LOAD_CONST 4",
+        "ADD",
+        "PRINT",
+        "LOAD_CONST 5",
+        "LOAD_VAR 6",
+        "PRINT",
+        "STORE_VAR 6",
+        "LOAD_CONST 7",
+        "LOAD_CONST 8",
+        "CALL 9",
+        "PRINT"
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "constants": [
+    5,
+    3,
+    "Hello, PostC!"
+  ],
+  "functions": {
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_CONST 0",
+        "LOAD_CONST 1",
+        "ADD",
+        "PRINT",
+        "LOAD_STRING 2",
+        "PRINT"
+      ]
+    }
+  }
+}

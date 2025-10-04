@@ -1,0 +1,16 @@
+# Simple PostC Compiler Test
+# Tests basic functionality
+
+# Simple arithmetic expression
+5 3 + print
+
+# Variable declaration
+let x 42
+x print
+
+# Function definition
+:add 2 param
+  a b + return
+;
+
+10 20 add print

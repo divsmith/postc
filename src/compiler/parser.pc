@@ -23,68 +23,199 @@
 :AST_STACK_OP 0 param "STACK_OP" ;
 :AST_RPN_EXPRESSION 0 param "RPN_EXPRESSION" ;
 
+# Token types (need to match lexer)
+:TOKEN_INTEGER 0 param "INTEGER" ;
+:TOKEN_FLOAT 0 param "FLOAT" ;
+:TOKEN_STRING 0 param "STRING" ;
+:TOKEN_IDENTIFIER 0 param "IDENTIFIER" ;
+:TOKEN_PLUS 0 param "PLUS" ;
+:TOKEN_MINUS 0 param "MINUS" ;
+:TOKEN_MULTIPLY 0 param "MULTIPLY" ;
+:TOKEN_DIVIDE 0 param "DIVIDE" ;
+:TOKEN_PRINT 0 param "PRINT" ;
+:TOKEN_RETURN 0 param "RETURN" ;
+:TOKEN_PARAM 0 param "PARAM" ;
+:TOKEN_EOF 0 param "EOF" ;
+:TOKEN_LET 0 param "LET" ;
+:TOKEN_VAR 0 param "VAR" ;
+:TOKEN_IF 0 param "IF" ;
+:TOKEN_ELSE 0 param "ELSE" ;
+:TOKEN_WHILE 0 param "WHILE" ;
+:TOKEN_DO 0 param "DO" ;
+:TOKEN_FOR 0 param "FOR" ;
+:TOKEN_COLON 0 param "COLON" ;
+:TOKEN_SEMICOLON 0 param "SEMICOLON" ;
+:TOKEN_PARAM 0 param "PARAM" ;
+:TOKEN_TRUE 0 param "TRUE" ;
+:TOKEN_FALSE 0 param "FALSE" ;
+:TOKEN_DUP 0 param "DUP" ;
+:TOKEN_DROP 0 param "DROP" ;
+:TOKEN_SWAP 0 param "SWAP" ;
+:TOKEN_OVER 0 param "OVER" ;
+:TOKEN_ROT 0 param "ROT" ;
+:TOKEN_EQUAL 0 param "EQUAL" ;
+:TOKEN_NOT_EQUAL 0 param "NOT_EQUAL" ;
+:TOKEN_LESS 0 param "LESS" ;
+:TOKEN_GREATER 0 param "GREATER" ;
+:TOKEN_LESS_EQUAL 0 param "LESS_EQUAL" ;
+:TOKEN_GREATER_EQUAL 0 param "GREATER_EQUAL" ;
+:TOKEN_ASSIGN 0 param "ASSIGN" ;
+:TOKEN_RETURN 0 param "RETURN" ;
+:TOKEN_LPAREN 0 param "LPAREN" ;
+:TOKEN_RPAREN 0 param "RPAREN" ;
+:TOKEN_LBRACE 0 param "LBRACE" ;
+:TOKEN_RBRACE 0 param "RBRACE" ;
+:TOKEN_LBRACKET 0 param "LBRACKET" ;
+:TOKEN_RBRACKET 0 param "RBRACKET" ;
+:TOKEN_COMMA 0 param "COMMA" ;
+:TOKEN_TRUE 0 param "TRUE" ;
+:TOKEN_FALSE 0 param "FALSE" ;
+:TOKEN_DUP 0 param "DUP" ;
+:TOKEN_DROP 0 param "DROP" ;
+:TOKEN_SWAP 0 param "SWAP" ;
+:TOKEN_OVER 0 param "OVER" ;
+:TOKEN_ROT 0 param "ROT" ;
+
+# AST Node structure:
+# Each AST node is represented as: [type, value, children, line, column]
+# Where:
+# - type is the AST node type (string)
+# - value is the node value (string/int/float/dict or null)
+# - children is a list of child AST nodes
+# - line and column are position information
+
+# Create an AST node
+:ast_create 5 param node_type node_value children line column
+  # Create node as array: [type, value, children, line, column]
+  node_type node_value children line column
+;
+
+# Get AST node type
+:ast_get_type 1 param node
+  node 0 get
+;
+
+# Get AST node value
+:ast_get_value 1 param node
+  node 1 get
+;
+
+# Get AST node children
+:ast_get_children 1 param node
+  node 2 get
+;
+
+# Get AST node line
+:ast_get_line 1 param node
+  node 3 get
+;
+
+# Get AST node column
+:ast_get_column 1 param node
+  node 4 get
+;
+
 # Parser state variables
 :current_token 0 param 0 ; # Current token being processed
 :tokens 0 param 0 ;        # List of tokens to parse
 :token_index 0 param 0 ;   # Current index in the token list
+:current_line 0 param 1 ;  # Current line number
+:current_column 0 param 1 ; # Current column number
 
 # Initialize parser with tokens
 :parser_init 1 param token_list
   "Initializing parser" print
   token_list tokens store
   0 token_index store
-  # Get first token
-  tokens load 0 get current_token store
-;
+  1 current_line store
+  1 current_column store
+  # Get first token if available
+  token_list length 0 > if
+    tokens load 0 get current_token store
+  else
+    [TOKEN_EOF, "", 1, 1] current_token store
+  ;
 
 # Advance to the next token
 :parser_advance 0 param
   token_index load 1 + token_index store
   # Check if we have more tokens
-  tokens load length token_index load < if
-    TOKEN_EOF current_token store  # Set to EOF if no more tokens
+  tokens load length token_index load <= if
+    [TOKEN_EOF, "", current_line load, current_column load] current_token store  # Set to EOF if no more tokens
   else
     tokens load token_index load get current_token store
   ;
 ;
 
+# Get current token value
+:parser_current_token_value 0 param
+  current_token load 1 get  # Assuming token format: [type, value, line, column]
+;
+
+# Get current token line
+:parser_current_token_line 0 param
+  current_token load 2 get
+;
+
+# Get current token column
+:parser_current_token_column 0 param
+  current_token load 3 get
+;
+
+# Get current token type (for comparisons)
+:parser_current_token_type 0 param
+  current_token load 0 get
+;
+
 # Expect a specific token type
 :parser_expect 1 param expected_type
-  current_token load expected_type != if
+  parser_current_token_type expected_type != if  # Compare token types
     "Parse error: Expected " print
     expected_type print
     ", got " print
-    current_token load print
-    " at index " print
-    token_index load print
+    parser_current_token_type print
+    " at line " print
+    parser_current_token_line print
+    ", column " print
+    parser_current_token_column print
     print
   else
     parser_advance
   ;
 ;
 
+# Check if current token is of a specific type
+:parser_is_token 1 param token_type
+  parser_current_token_type token_type ==
+;
+
 # Parse a program (list of statements)
 :parser_parse_program 0 param
-  AST_PROGRAM
-  "Program:" print
-  
+  "Parsing program..." print
+  # Create program AST node
+  AST_PROGRAM 0 [] current_line load current_column load ast_create
+  :program_node 0 param program_node store
+
   # Parse all statements until EOF
   :stmt_loop 0 param
-    current_token load TOKEN_EOF != if
+    parser_current_token_type TOKEN_EOF != if
       parser_parse_statement
+        ;
       stmt_loop  # Continue parsing statements
     ;
   ;
-  
+
   stmt_loop
+  "Program parsed successfully" print
+  program_node
 ;
 
 # Parse a single statement
 :parser_parse_statement 0 param
-  current_token load TOKEN_COLON == if
+  parser_current_token_type TOKEN_COLON == if
     parser_parse_function_decl
   else
-    current_token load TOKEN_LET current_token load TOKEN_VAR or == if
+    parser_current_token_type TOKEN_LET == parser_current_token_type TOKEN_VAR == or if
       parser_parse_variable_decl
     else
       parser_parse_rpn_expression  # RPN expressions are the default
@@ -94,146 +225,449 @@
 
 # Parse a function declaration
 :parser_parse_function_decl 0 param
+  "Parsing function declaration..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
   parser_expect TOKEN_COLON  # Eat the ':'
-  
+
   # Get function name
-  current_token load "Function name: " print current_token load print
+  parser_current_token_value :func_name
   parser_advance
-  
+
   # Get parameter count
-  current_token load "Param count: " print current_token load print
+  parser_current_token_value :param_count_str
   parser_advance
-  
+
   # Eat 'param'
   parser_expect TOKEN_PARAM
-  
+
   # Parse function body
-  # In a full implementation, this would parse the block
-  "Function body" print
-  
+  parser_parse_block :body
+
+  # Create function declaration AST node
   AST_FUNCTION_DECL
+  {"name": func_name, "param_count": param_count_str}
+  [body]
+  line col ast_create
 ;
 
 # Parse a variable declaration
 :parser_parse_variable_decl 0 param
+  "Parsing variable declaration..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+
   # Get the var type (LET or VAR)
-  current_token load "Variable type: " print current_token load print
+  parser_current_token_type :var_type
   parser_advance
-  
+
   # Get variable name
-  current_token load "Variable name: " print current_token load print
+  parser_current_token_value :var_name
   parser_advance
-  
+
   # Parse the value expression
-  "Variable value" print
-  parser_parse_rpn_expression
-  
+  parser_parse_rpn_expression :value_expr
+
+  # Create variable declaration AST node
   AST_VARIABLE_DECL
+  {"name": var_name, "mutable": var_type TOKEN_VAR ==}
+  value_expr if [value_expr] else [] ;
+  line col ast_create
+;
+
+# Parse a block of statements
+:parser_parse_block 0 param
+  "Parsing block..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+
+  # Create block AST node
+  AST_BLOCK 0 [] line col ast_create :block_node
+
+  # Parse statements until end of block
+  :block_loop 0 param
+    # Check for end conditions
+    parser_current_token_type TOKEN_EOF == parser_current_token_type TOKEN_RBRACE == or if
+      block_loop 1 return  # Exit loop
+    ;
+
+    # Check if next token starts a new function (not part of this block)
+    parser_current_token_type TOKEN_COLON == if
+      block_loop 1 return  # Exit loop
+    ;
+
+    # Parse statement
+    parser_parse_statement :stmt
+    stmt if
+      # Add to block children
+      block_node ast_get_children :children children push
+      children block_node 2 put
+    ;
+
+    block_loop
+  ;
+
+  block_node
 ;
 
 # Parse an RPN expression
 :parser_parse_rpn_expression 0 param
-  "Parsing RPN expression" print
-  
+  "Parsing RPN expression..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+
   # Handle special constructs like if/else
-  current_token load TOKEN_IF == if
+  parser_current_token_type TOKEN_IF == if
     parser_parse_if_expr
   else
-    current_token load TOKEN_WHILE == if
+    parser_current_token_type TOKEN_WHILE == if
       parser_parse_while_loop
     else
-      current_token load TOKEN_FOR == if
+      parser_current_token_type TOKEN_FOR == if
         parser_parse_for_loop
       else
-        # Process tokens until we hit a statement separator
-        :expr_loop 0 param
-          current_token load TOKEN_SEMICOLON current_token load TOKEN_EOF current_token load TOKEN_ELSE or or != if
-            current_token load "Processing token: " print current_token load print
-            parser_advance
-            expr_loop
-          ;
-        ;
-        expr_loop
-        
-        AST_RPN_EXPRESSION
+        # Parse regular RPN expression
+        parser_parse_rpn_tokens :expr_value
+        # Create RPN expression AST node
+        AST_RPN_EXPRESSION expr_value [] line col ast_create
       ;
     ;
   ;
 ;
 
+# Parse RPN expression tokens into a string
+:parser_parse_rpn_tokens 0 param
+  "Parsing RPN tokens..." print
+  :expr_parts [] ;  # List to collect expression parts
+
+  :token_loop 0 param
+    # Check for end conditions
+    parser_current_token_type TOKEN_EOF == parser_current_token_type TOKEN_SEMICOLON == or parser_current_token_type TOKEN_ELSE == or if
+      token_loop 1 return
+    ;
+
+    # Skip comments
+    parser_current_token_type "COMMENT" == if
+      parser_advance
+      token_loop
+    ;
+
+    # Handle array literals [1, 2, 3]
+    parser_current_token_type TOKEN_LBRACKET == if
+      parser_parse_array_literal :array_node
+      # Convert array node to string representation for RPN
+      "[array]" :token_val
+      expr_parts :parts parts push
+      parts expr_parts store
+      token_loop
+    ;
+
+    # Handle dictionary literals {key: value}
+    parser_current_token_type TOKEN_LBRACE == if
+      parser_parse_dict_literal :dict_node
+      # Convert dict node to string representation for RPN
+      "{dict}" :token_val
+      expr_parts :parts parts push
+      parts expr_parts store
+      token_loop
+    ;
+
+    # Add token value to expression
+    parser_current_token_value :token_val
+    expr_parts :parts parts push
+    parts expr_parts store
+
+    parser_advance
+    token_loop
+  ;
+
+  # Join all parts with spaces
+  expr_parts :result "" ;
+  expr_parts length 0 > if
+    expr_parts 0 get :result
+    1 :i
+    :join_loop 0 param
+      i expr_parts length < if
+        " " :result result +
+        expr_parts i get :result result +
+        i 1 + :i
+        join_loop
+      ;
+    ;
+    join_loop
+  ;
+
+  result
+;
+
+# Parse array literal [elem1, elem2, elem3]
+:parser_parse_array_literal 0 param
+  "Parsing array literal..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+  parser_expect TOKEN_LBRACKET
+
+  # Create array AST node
+  AST_ARRAY_LITERAL 0 [] line col ast_create :array_node
+  :elements [] ;
+
+  # Parse elements until closing bracket
+  parser_current_token_type TOKEN_RBRACKET != if
+    # Parse element expression
+    parser_parse_rpn_expression :element
+    element if
+      elements :elems elems push
+      elems elements store
+    ;
+
+    # Check for comma (more elements)
+    parser_current_token_type TOKEN_COMMA == if
+      parser_expect TOKEN_COMMA
+      # Continue parsing more elements
+      parser_parse_array_literal_elements
+    ;
+  ;
+
+  parser_expect TOKEN_RBRACKET
+  array_node
+;
+
+# Helper function to parse array elements after first
+:parser_parse_array_literal_elements 0 param
+  parser_parse_rpn_expression :element
+  element if
+    array_node ast_get_children :children children push
+    children array_node 2 put
+  ;
+
+  # Check for more elements
+  parser_current_token_type TOKEN_COMMA == if
+    parser_expect TOKEN_COMMA
+    parser_parse_array_literal_elements
+  ;
+;
+
+# Parse dictionary literal {key: value, key2: value2}
+:parser_parse_dict_literal 0 param
+  "Parsing dictionary literal..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+  parser_expect TOKEN_LBRACE
+
+  # Create dict AST node
+  AST_DICT_LITERAL 0 [] line col ast_create :dict_node
+
+  # Parse key-value pairs until closing brace
+  parser_current_token_type TOKEN_RBRACE != if
+    # Parse key (identifier or string)
+    parser_current_token_type TOKEN_IDENTIFIER == parser_current_token_type TOKEN_STRING == or if
+      parser_current_token_value :key
+      parser_advance
+
+      # Expect colon
+      parser_expect TOKEN_COLON
+
+      # Parse value expression
+      parser_parse_rpn_expression :value
+
+      # Add key-value pair to dict (simplified representation)
+      {"key": key, "value": value} :pair
+      dict_node ast_get_children :children children push
+      children dict_node 2 put
+    ;
+  ;
+
+  parser_expect TOKEN_RBRACE
+  dict_node
+;
+
 # Parse an if expression
 :parser_parse_if_expr 0 param
+  "Parsing if expression..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
   parser_expect TOKEN_IF
-  
+
   # Parse condition
-  "If condition" print
-  parser_parse_rpn_expression
-  
+  parser_parse_rpn_expression :condition
+
   # Parse then branch
-  "Then branch" print
-  parser_parse_rpn_expression
-  
+  parser_parse_block :then_branch
+
   # Check for else branch
-  current_token load TOKEN_ELSE == if
+  parser_current_token_type TOKEN_ELSE == if
     parser_expect TOKEN_ELSE
-    "Else branch" print
-    parser_parse_rpn_expression
+    parser_parse_block :else_branch
+    # Create if-else AST node
+    AST_IF_EXPR 0 [condition, then_branch, else_branch] line col ast_create
+  else
+    # Create if-only AST node
+    AST_IF_EXPR 0 [condition, then_branch] line col ast_create
   ;
-  
-  AST_IF_EXPR
 ;
 
 # Parse a while loop
 :parser_parse_while_loop 0 param
+  "Parsing while loop..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
   parser_expect TOKEN_WHILE
-  
+
   # Parse condition
-  "While condition" print
-  parser_parse_rpn_expression
-  
+  parser_parse_rpn_expression :condition
+
   # Eat 'do'
   parser_expect TOKEN_DO
-  
+
   # Parse body
-  "While body" print
-  parser_parse_rpn_expression
-  
-  AST_WHILE_LOOP
+  parser_parse_block :body
+
+  # Create while loop AST node
+  AST_WHILE_LOOP 0 [condition, body] line col ast_create
 ;
 
 # Parse a for loop
 :parser_parse_for_loop 0 param
+  "Parsing for loop..." print
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
   parser_expect TOKEN_FOR
-  
-  # Parse count
-  "For count" print
-  parser_parse_rpn_expression
-  
+
+  # Parse count expression (in RPN, count is already on stack)
+  parser_parse_rpn_tokens :count_expr
+
   # Parse body
-  "For body" print
-  parser_parse_rpn_expression
-  
-  AST_FOR_LOOP
+  parser_parse_block :body
+
+  # Create for loop AST node
+  AST_FOR_LOOP 0 [count_expr, body] line col ast_create
+;
+
+# Parse a literal value (integer, float, string, boolean)
+:parser_parse_literal 0 param
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+  :token_type parser_current_token_type ;
+  :token_value parser_current_token_value ;
+
+  token_type TOKEN_INTEGER == if
+    AST_INTEGER_LITERAL token_value [] line col ast_create
+  else
+    token_type TOKEN_FLOAT == if
+      AST_FLOAT_LITERAL token_value [] line col ast_create
+    else
+      token_type TOKEN_STRING == if
+        AST_STRING_LITERAL token_value [] line col ast_create
+      else
+        token_type TOKEN_TRUE == if
+          AST_BOOLEAN_LITERAL 1 [] line col ast_create
+        else
+          token_type TOKEN_FALSE == if
+            AST_BOOLEAN_LITERAL 0 [] line col ast_create
+          else
+            0  # Not a literal
+          ;
+        ;
+      ;
+    ;
+  ;
+;
+
+# Parse an identifier
+:parser_parse_identifier 0 param
+  :line parser_current_token_line ;
+  :col parser_current_token_column ;
+  :name parser_current_token_value ;
+
+  # Create identifier AST node
+  AST_IDENTIFIER name [] line col ast_create
 ;
 
 # Parse token list and return AST
 :parse 1 param token_list
   "Starting parser..." print
-  
+
   # Initialize the parser
   token_list parser_init
-  
+
   # Parse the program
   :result parser_parse_program
-  
+
   "Parser finished" print
   result
 ;
 
-# Test parser
+# Test parser with comprehensive examples
 :parser_test 0 param
-  # In a real implementation, we'd have token list from lexer
-  # For now, just demonstrate the functionality
-  "Testing parser with dummy token list" print
-  "dummy_token_list" parse
+  "Testing parser with comprehensive examples..." print
+
+  # Test 1: Simple RPN expression
+  "Test 1: Simple RPN expression" print
+  [
+    [TOKEN_INTEGER, "5", 1, 1],
+    [TOKEN_INTEGER, "3", 1, 3],
+    [TOKEN_PLUS, "+", 1, 5],
+    [TOKEN_PRINT, "print", 1, 7],
+    [TOKEN_EOF, "", 1, 11]
+  ] :test_tokens1
+
+  test_tokens1 parse :result1
+  "Test 1 completed" print
+
+  # Test 2: Variable declarations
+  "Test 2: Variable declarations" print
+  [
+    [TOKEN_LET, "let", 1, 1],
+    [TOKEN_IDENTIFIER, "x", 1, 5],
+    [TOKEN_INTEGER, "10", 1, 7],
+    [TOKEN_SEMICOLON, ";", 1, 9],
+    [TOKEN_VAR, "var", 2, 1],
+    [TOKEN_IDENTIFIER, "y", 2, 5],
+    [TOKEN_INTEGER, "20", 2, 7],
+    [TOKEN_SEMICOLON, ";", 2, 9],
+    [TOKEN_EOF, "", 2, 10]
+  ] :test_tokens2
+
+  test_tokens2 parse :result2
+  "Test 2 completed" print
+
+  # Test 3: Function definition
+  "Test 3: Function definition" print
+  [
+    [TOKEN_COLON, ":", 1, 1],
+    [TOKEN_IDENTIFIER, "test_func", 1, 2],
+    [TOKEN_INTEGER, "2", 1, 12],
+    [TOKEN_PARAM, "param", 1, 14],
+    [TOKEN_INTEGER, "10", 2, 3],
+    [TOKEN_INTEGER, "20", 2, 6],
+    [TOKEN_PLUS, "+", 2, 8],
+    [TOKEN_RETURN, "return", 2, 10],
+    [TOKEN_SEMICOLON, ";", 2, 16],
+    [TOKEN_EOF, "", 3, 1]
+  ] :test_tokens3
+
+  test_tokens3 parse :result3
+  "Test 3 completed" print
+
+  # Test 4: Control structures
+  "Test 4: Control structures" print
+  [
+    [TOKEN_IDENTIFIER, "x", 1, 1],
+    [TOKEN_IDENTIFIER, "y", 1, 3],
+    [TOKEN_LESS, "<", 1, 5],
+    [TOKEN_IF, "if", 1, 7],
+    [TOKEN_STRING, "x is less", 2, 3],
+    [TOKEN_PRINT, "print", 2, 12],
+    [TOKEN_ELSE, "else", 3, 1],
+    [TOKEN_STRING, "x is not less", 3, 6],
+    [TOKEN_PRINT, "print", 3, 18],
+    [TOKEN_SEMICOLON, ";", 4, 1],
+    [TOKEN_EOF, "", 4, 2]
+  ] :test_tokens4
+
+  test_tokens4 parse :result4
+  "Test 4 completed" print
+
+  "All parser tests completed successfully!" print
+  result1 result2 result3 result4
 ;

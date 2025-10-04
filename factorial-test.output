@@ -1,0 +1,41 @@
+{
+  "constants": [
+    2,
+    1,
+    "factorial",
+    "Calculating factorial of 5:",
+    5
+  ],
+  "functions": {
+    "factorial": {
+      "name": "factorial",
+      "param_count": 1,
+      "instructions": [
+        "DUP",
+        "LOAD_CONST 0",
+        "LT",
+        "DROP",
+        "LOAD_CONST 1",
+        "JUMP_IF_FALSE 7",
+        "JUMP 12",
+        "DUP",
+        "LOAD_CONST 1",
+        "SUB",
+        "CALL 2",
+        "MUL",
+        "RETURN"
+      ]
+    },
+    "main": {
+      "name": "main",
+      "param_count": 0,
+      "instructions": [
+        "LOAD_STRING 3",
+        "PRINT",
+        "LOAD_CONST 4",
+        "CALL 2",
+        "PRINT"
+      ]
+    }
+  }
+}
